@@ -2,62 +2,52 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Meet Lui, the anti-productivity desktop pet nobody asked for."
-    />
-    <title>WTH Is This? — Get Your Lui</title>
-    <link
-      rel="preload"
-      href="assets/website/lui-landing-base.svg"
-      as="image"
-      type="image/svg+xml"
-      fetchpriority="high"
-    />
-    <link rel="preload" href="assets/website/lui-texture.jpg" as="image" type="image/jpeg" />
-    <link rel="preload" href="assets/website/lui-2x.webp" as="image" type="image/webp" />
-    <link rel="stylesheet" href="site.css" />
-    <script src="site.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lui — your gentle task companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="artboard" id="artboard">
-      <a class="docs-link" href="docs.html">Docs <span aria-hidden="true">↗</span></a>
+    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+    <header class="topbar">
+      <button class="brand" data-view="home" aria-label="Go home"><span class="brand-mark">l</span><span>lui</span></button>
+      <nav aria-label="Main navigation">
+        <button data-view="graph">mood</button>
+        <button data-view="chat">ask lui</button>
+        <button data-view="schedule">schedule</button>
+      </nav>
+      <button class="profile" title="Lui is feeling calm">◒</button>
+    </header>
 
-      <object
-        class="original-design"
-        data="assets/website/lui-landing-base.svg"
-        type="image/svg+xml"
-        aria-label="Lui, your most trustable AI assistant, designed by Anandhu and Abhijith"
-        width="1920"
-        height="1080"
-      ></object>
+    <main>
+      <section class="view active" id="home">
+        <div class="hero-copy"><p class="eyebrow">YOUR SOFT CORNER OF THE DAY</p><h1>hello, <i>friend.</i></h1><p class="lede">A calmer way to remember what matters. Lui keeps your small plans, big feelings and loose thoughts together.</p></div>
+        <div class="lui-orb" aria-label="Lui is feeling content"><span>◡</span><em>content</em></div>
+        <div class="home-actions">
+          <button class="feature card-graph" data-view="graph"><span class="feature-icon">◌</span><span><b>Lui graph</b><small>check in with lui</small></span><i>↗</i></button>
+          <button class="feature card-chat" data-view="chat"><span class="feature-icon">✦</span><span><b>Lui GPT</b><small>talk it out</small></span><i>↗</i></button>
+          <button class="feature card-assign" data-view="schedule"><span class="feature-icon">＋</span><span><b>Assign task</b><small>make a gentle plan</small></span><i>↗</i></button>
+          <button class="feature card-schedule" data-view="tasks" data-list="schedule"><span class="feature-icon">▤</span><span><b>Schedules</b><small>your upcoming days</small></span><i>↗</i></button>
+          <button class="feature card-void" data-view="tasks" data-list="void"><span class="feature-icon">⌁</span><span><b>Voids</b><small>make room for later</small></span><i>↗</i></button>
+        </div>
+      </section>
 
-      <a
-        class="lui-hit-area"
-        id="luiDownload"
-        href="https://github.com/anandh0u/Wth_is_this/releases/download/v0.1.2/WTH-Is-This-0.1.2-demo.zip"
-        download="WTH-Is-This-0.1.2-demo.zip"
-        aria-label="Click Lui to download the WTH Is This demo"
-      ></a>
+      <section class="view" id="graph">
+        <div class="page-heading"><button class="back" data-view="home">← back</button><p class="eyebrow">LUI'S INNER WEATHER</p><h2>mood <i>graph</i></h2><p>One feeling at a time. Drag the little lui to reflect how today feels.</p></div>
+        <div class="graph-layout"><div class="mood-chart" id="mood-chart"><div class="axis horizontal"></div><div class="axis vertical"></div><span class="axis-label top">high energy</span><span class="axis-label bottom">low energy</span><span class="axis-label left">unpleasant</span><span class="axis-label right">pleasant</span><button class="mood-dot happy" data-mood="happy" style="left:74%;top:23%">☺</button><button class="mood-dot annoyed" data-mood="annoyed" style="left:25%;top:23%">ಠ_ಠ</button><button class="mood-dot sad" data-mood="sad" style="left:25%;top:72%">☹</button><button class="mood-dot scared" data-mood="scared" style="left:74%;top:72%">◉_◉</button></div><aside class="mood-note"><span id="mood-emoji">☺</span><p class="eyebrow">RIGHT NOW, LUI IS</p><h3 id="mood-title">feeling bright</h3><p id="mood-copy">There is a little extra sparkle in the room today.</p><button class="soft-button" id="random-mood">check in again ↻</button></aside></div>
+      </section>
 
-      <a
-        class="runaway-cta"
-        id="runawayCta"
-        href="https://github.com/anandh0u/Wth_is_this/releases/download/v0.1.2/WTH-Is-This-0.1.2-demo.zip"
-        download="WTH-Is-This-0.1.2-demo.zip"
-        aria-label="Get Your Lui"
-      >
-        <img
-          src="assets/website/get-your-lui.svg"
-          alt="Get Your Lui."
-          width="548"
-          height="63"
-          draggable="false"
-        />
-      </a>
+      <section class="view" id="chat"><div class="page-heading compact"><button class="back" data-view="home">← back</button><p class="eyebrow">A QUIET CHAT WITH LUI</p><h2>what's on your <i>mind?</i></h2></div><div class="chat-shell"><div class="chat-status"><span class="status-dot"></span>lui is here with you</div><div class="messages" id="messages"><article class="message lui-message"><span class="avatar">l</span><p>Hi, friend. I’m glad you’re here. What would feel good to talk through?</p></article></div><form class="chat-compose" id="chat-form"><input id="chat-input" autocomplete="off" placeholder="write to lui..." aria-label="Message Lui"/><button type="submit" aria-label="Send message">↑</button></form></div></section>
 
-      <p class="screen-reader-status" id="interactionStatus" aria-live="polite"></p>
+      <section class="view" id="schedule"><div class="page-heading compact"><button class="back" data-view="home">← back</button><p class="eyebrow">MAKE A GENTLE PLAN</p><h2>assign a <i>task.</i></h2><p>It only needs a name, a day and a time. Lui will hold the rest.</p></div><form class="task-form" id="task-form"><label>What is it?<input name="name" required placeholder="e.g. Call grandma" /></label><div class="form-row"><label>When?<input name="date" type="date" required /></label><label>What time?<input name="time" type="time" required /></label></div><label class="form-check"><input name="void" type="checkbox"/> I’m not ready for this yet — place it in voids</label><button class="primary-button" type="submit">save this for me <span>→</span></button></form></section>
+
+      <section class="view" id="tasks"><div class="page-heading compact"><button class="back" data-view="home">← back</button><p class="eyebrow" id="list-kicker">YOUR UPCOMING DAYS</p><h2 id="list-title">little <i>plans.</i></h2></div><div class="list-tabs"><button class="tab active" data-list-tab="schedule">schedules</button><button class="tab" data-list-tab="void">voids</button></div><div class="task-list" id="task-list"></div></section>
+
+      <section class="view" id="detail"><div class="page-heading compact"><button class="back" data-view="tasks">← back to list</button><p class="eyebrow">A LITTLE REMINDER</p><h2>task <i>details.</i></h2></div><article class="detail-card" id="detail-card"></article></section>
     </main>
+    <footer>made for softer days <span>✦</span></footer>
+    <script src="app.js"></script>
   </body>
 </html>
