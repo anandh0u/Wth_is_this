@@ -7,6 +7,7 @@ const { decide: decideAsLui, getStatus: getAiStatus } = require("./ai/lui-engine
 const { randomAudioUrl } = require("./audio");
 
 const PORT = 17381;
+const PET_GROUND_MARGIN = 10;
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 let mainWindow;
 let petWindow;
@@ -19,7 +20,6 @@ let petMovementTimer;
 let bridgeHeartbeatTimer;
 let petX = 0;
 let petDirection = -1;
-let petStep = 0;
 let luiDecisionInFlight = false;
 let lastLuiDecisionAt = 0;
 const panelWindows = new Map();
@@ -169,11 +169,20 @@ function maybeAutomaticDecision() {
 
 function startBridge() {
   const httpServer = http.createServer((request, response) => {
+    const corsHeaders = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-allow-private-network": "true",
+      "cache-control": "no-store",
+    };
+    if (request.method === "OPTIONS") {
+      response.writeHead(204, corsHeaders);
+      response.end();
+      return;
+    }
     if (request.url === "/health") {
-      response.writeHead(204, {
-        "access-control-allow-origin": "*",
-        "cache-control": "no-store",
-      });
+      response.writeHead(204, corsHeaders);
       response.end();
       return;
     }
@@ -222,7 +231,7 @@ function createWindow() {
     height: 680,
     minWidth: 360,
     minHeight: 520,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     icon: path.join(__dirname, "..", "assets", "lui-meme-icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -236,7 +245,7 @@ function createWindow() {
 function createPetWindow() {
   const workArea = screen.getPrimaryDisplay().workArea;
   petX = workArea.x + workArea.width - 180;
-  const y = workArea.y + workArea.height - 180;
+  const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
   petWindow = new BrowserWindow({
     width: 170,
     height: 170,
@@ -263,8 +272,8 @@ function createPetWindow() {
 
 function movePet() {
   if (!petWindow || petWindow.isDestroyed() || !state.settings.petEnabled || !state.settings.petWalkingEnabled) return;
-  const workArea = screen.getDisplayNearestPoint({ x: petX, y: 0 }).workArea;
-  petX += petDirection * (state.mood === "chaotic" ? 5 : 2);
+  const workArea = screen.getPrimaryDisplay().workArea;
+  petX += petDirection * (state.mood === "chaotic" ? 8 : 4);
   const minimumX = workArea.x;
   const maximumX = workArea.x + workArea.width - 170;
   if (petX <= minimumX || petX >= maximumX) {
@@ -272,10 +281,10 @@ function movePet() {
     petX = Math.max(minimumX, Math.min(maximumX, petX));
     petWindow.webContents.send("direction", petDirection);
   }
-  petStep += 0.16;
-  const bounce = Math.round(Math.abs(Math.sin(petStep)) * 10);
-  const y = workArea.y + workArea.height - 170 - bounce;
-  petWindow.setPosition(Math.round(petX), y, false);
+  const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
+  const nextX = Math.round(petX);
+  const current = petWindow.getBounds();
+  if (current.x !== nextX || current.y !== y) petWindow.setPosition(nextX, y, false);
 }
 
 function runDemoSequence() {
@@ -401,7 +410,7 @@ app.whenReady().then(() => {
   reminderTimer = setInterval(checkReminders, 5000);
   void refreshAiStatus();
   aiStatusTimer = setInterval(refreshAiStatus, 30000);
-  petMovementTimer = setInterval(movePet, 45);
+  petMovementTimer = setInterval(movePet, 100);
   bridgeHeartbeatTimer = setInterval(() => {
     if (extensionSocket && extensionSocket.readyState === extensionSocket.OPEN) {
       extensionSocket.send(JSON.stringify({ type: "heartbeat", payload: { at: Date.now() } }));

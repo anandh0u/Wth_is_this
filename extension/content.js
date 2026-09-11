@@ -61,6 +61,13 @@ chrome.runtime.onMessage.addListener((message, _sender, respond) => {
     });
     shadow.append(bubble, image);
     document.documentElement.append(host);
+    image.animate([
+      { transform: "translateY(0) rotate(-2deg) scaleY(1)" },
+      { transform: "translateY(-7px) rotate(2deg) scaleY(.97)" },
+      { transform: "translateY(-1px) rotate(2deg) scaleY(1.03)" },
+      { transform: "translateY(-7px) rotate(-2deg) scaleY(.97)" },
+      { transform: "translateY(0) rotate(-2deg) scaleY(1)" },
+    ], { duration: 520, iterations: Infinity, easing: "ease-in-out" });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       host.style.transform = `translateX(${window.innerWidth + 380}px)`;
     }));

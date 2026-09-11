@@ -21,8 +21,9 @@ function randomMemeUrl() {
 
 async function connect() {
   clearTimeout(reconnectTimer);
+  if (socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState)) return;
   try {
-    const response = await fetch(HEALTH, { cache: "no-store" });
+    const response = await fetch(HEALTH, { cache: "no-store", targetAddressSpace: "local" });
     if (!response.ok) throw new Error("desktop unavailable");
   } catch {
     chrome.storage.local.set({ bridgeState: "waiting" });
@@ -170,6 +171,12 @@ chrome.tabs.onUpdated.addListener((_id, info) => { if (info.status === "complete
 chrome.idle.setDetectionInterval(60);
 chrome.idle.onStateChanged.addListener(handleIdleState);
 chrome.runtime.onMessage.addListener((message, _sender, respond) => {
+  if (message.type === "bridge_retry") {
+    connect()
+      .then(() => respond({ ok: true }))
+      .catch(() => respond({ ok: false }));
+    return true;
+  }
   if (message.type !== "popup_action") return;
   const allowed = new Set(["pet_visit", "close_active", "undo_close", "open_meme"]);
   if (!allowed.has(message.action)) {
