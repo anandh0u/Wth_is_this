@@ -10,7 +10,7 @@
     "check": "node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/renderer.js && node --check desktop/panels/panels.js && node --check extension/background.js && node --check extension/content.js"
   },
   "devDependencies": {
-    "electron": "^38.1.2"
+    "electron": "^44.3.0"
   },
   "dependencies": {
     "ws": "^8.18.3"
