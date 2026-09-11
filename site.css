@@ -19,9 +19,8 @@ body {
   display: grid;
   min-height: 100svh;
   overflow: hidden;
-  align-items: start;
-  justify-items: center;
-  background: #79636b;
+  place-items: center;
+  background: linear-gradient(108deg, #c9ad92 0%, #a58a80 54%, #745a68 100%);
 }
 
 body::before {
@@ -29,15 +28,16 @@ body::before {
   position: fixed;
   inset: -2rem;
   background:
-    radial-gradient(circle at 85% 15%, rgba(66, 43, 58, 0.72), transparent 44%),
+    radial-gradient(circle at 85% 15%, rgba(66, 43, 58, 0.7), transparent 44%),
+    linear-gradient(108deg, rgba(201, 173, 146, 0.72), rgba(116, 90, 104, 0.72)),
     url("assets/website/lui-texture.jpg") center / cover no-repeat;
-  filter: blur(1.5rem);
-  opacity: 0.88;
+  filter: blur(0.55rem);
+  opacity: 0.72;
 }
 
 .artboard {
   position: relative;
-  width: 100vw;
+  width: min(100vw, 177.7778svh);
   aspect-ratio: 16 / 9;
   overflow: hidden;
   user-select: none;
@@ -144,10 +144,6 @@ body::before {
 }
 
 @media (max-aspect-ratio: 16 / 9) {
-  body {
-    place-items: center;
-  }
-
   .artboard {
     width: min(100vw, 177.7778svh);
   }

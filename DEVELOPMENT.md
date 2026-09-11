@@ -2,13 +2,6 @@
 
 Pet name: **Lui**
 
-## Ownership boundary
-
-- Mani: root website, visual app design, pet design/assets.
-- Behavior/integration: Electron runtime, local data, reminders, browser extension,
-  controlled chaos, audio/AI integrations.
-- The root `index.html` is intentionally untouched.
-
 ## Run locally
 
 ```powershell
@@ -68,8 +61,6 @@ silently install an extension.
 ## Next integration inputs
 
 - Copy short audio files into `assets/memes/` after they are selected.
-- Mani can replace the temporary generated icon and provide Lui's mood-state
-  assets without changing the behavior APIs exposed from `desktop/preload.js`.
 
 ## Local AI (no training required)
 
