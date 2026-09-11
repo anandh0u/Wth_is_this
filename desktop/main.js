@@ -115,15 +115,30 @@ function playRandomMemeAudio() {
   return true;
 }
 
+function playPetAnimation(name) {
+  if (petWindow && !petWindow.isDestroyed()) {
+    petWindow.webContents.send("pet-animation", name);
+  }
+}
+
+function sendToExtensionAfterAnimation(type, payload = {}, animation = "", delay = 0) {
+  if (animation) playPetAnimation(animation);
+  if (delay > 0) {
+    setTimeout(() => sendToExtension(type, payload), delay);
+    return true;
+  }
+  return sendToExtension(type, payload);
+}
+
 function performDecisionAction(decision, context) {
   if (!state.settings.petEnabled || !state.settings.chaosEnabled) return;
   if (decision.action === "open_meme") {
-    sendToExtension("open_meme");
+    sendToExtensionAfterAnimation("open_meme", {}, "happy", 300);
     playRandomMemeAudio();
   } else if (decision.action === "close_active") {
-    sendToExtension("close_active");
+    sendToExtensionAfterAnimation("close_active", {}, "swipe", 560);
   } else if (decision.action === "pet_visit") {
-    sendToExtension("pet_visit", { line: decision.line });
+    sendToExtensionAfterAnimation("pet_visit", { line: decision.line }, "wave", 320);
   } else if (decision.action === "void_todo") {
     const todo = state.todos.find((item) => item.id === context.todoId && item.status === "alive") ||
       state.todos.find((item) => item.status === "alive");
@@ -306,10 +321,10 @@ function runDemoSequence() {
   log("Demo mode started.");
   broadcastState();
   setTimeout(() => {
-    sendToExtension("pet_visit", { line: "I have entered your browser without knocking." });
+    sendToExtensionAfterAnimation("pet_visit", { line: "I have entered your browser without knocking." }, "wave", 320);
     playRandomMemeAudio();
   }, 1800);
-  setTimeout(() => sendToExtension("open_meme"), 3800);
+  setTimeout(() => sendToExtensionAfterAnimation("open_meme", {}, "happy", 300), 3800);
   setTimeout(() => {
     state.boredom = 10;
     state.petLine = "Excellent. Your productivity has been successfully interrupted.";
@@ -539,7 +554,10 @@ ipcMain.handle("void-todo", (_event, id) => {
 });
 ipcMain.handle("browser-action", (_event, action) => {
   const allowed = new Set(["close_active", "undo_close", "open_meme", "pet_visit"]);
-  if (allowed.has(action)) sendToExtension(action);
+  if (action === "close_active") sendToExtensionAfterAnimation(action, {}, "swipe", 560);
+  else if (action === "open_meme") sendToExtensionAfterAnimation(action, {}, "happy", 300);
+  else if (action === "pet_visit") sendToExtensionAfterAnimation(action, {}, "wave", 320);
+  else if (allowed.has(action)) sendToExtension(action);
   return state;
 });
 ipcMain.handle("ask-lui", (_event, input) => {
