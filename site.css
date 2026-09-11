@@ -52,6 +52,32 @@ body::before {
   pointer-events: none;
 }
 
+.docs-link {
+  position: absolute;
+  z-index: 5;
+  top: 4.1%;
+  right: 2.4%;
+  padding: clamp(0.32rem, 0.55vw, 0.65rem) clamp(0.55rem, 0.85vw, 1rem);
+  border: max(2px, 0.16vw) solid rgba(254, 238, 163, 0.78);
+  background: rgba(49, 17, 32, 0.72);
+  box-shadow: max(3px, 0.28vw) max(3px, 0.28vw) 0 rgba(49, 17, 32, 0.34);
+  color: #feeea3;
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(0.62rem, 1.05vw, 1.2rem);
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.docs-link:hover,
+.docs-link:focus-visible {
+  background: #feeea3;
+  color: #5c3138;
+  outline: none;
+  transform: translate(-2px, -2px);
+}
+
 .lui-hit-area {
   position: absolute;
   z-index: 2;
