@@ -19,7 +19,8 @@ body {
   display: grid;
   min-height: 100svh;
   overflow: hidden;
-  place-items: center;
+  align-items: start;
+  justify-items: center;
   background: #79636b;
 }
 
@@ -36,11 +37,10 @@ body::before {
 
 .artboard {
   position: relative;
-  width: min(100vw, 177.7778svh);
+  width: 100vw;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   user-select: none;
-  box-shadow: 0 0 2rem rgba(49, 17, 32, 0.18);
 }
 
 .original-design {
@@ -144,8 +144,12 @@ body::before {
 }
 
 @media (max-aspect-ratio: 16 / 9) {
+  body {
+    place-items: center;
+  }
+
   .artboard {
-    width: 100vw;
+    width: min(100vw, 177.7778svh);
   }
 }
 
