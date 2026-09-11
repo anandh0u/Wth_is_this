@@ -7,7 +7,9 @@ header strong, header span { display: block; }
 #status.connected { color: #63dc8c; }
 #hint { min-height: 34px; color: #c6bfcd; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+#connect { width: 100%; margin: 0 0 9px; border-color: #9d5fe8; background: #7027c9; }
 button { padding: 9px 6px; border: 1px solid #6d6577; border-radius: 8px; color: inherit; background: #2b2732; cursor: pointer; }
 button:hover { background: #7027c9; }
 button:disabled { opacity: .45; cursor: not-allowed; }
+[hidden] { display: none !important; }
 .fine { margin-bottom: 0; color: #8f8898; font-size: 11px; }
