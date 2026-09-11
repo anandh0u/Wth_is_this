@@ -27,7 +27,9 @@ body::before {
   content: "";
   position: fixed;
   inset: -2rem;
-  background: url("assets/website/lui-landing-base.png") center / cover no-repeat;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(66, 43, 58, 0.72), transparent 44%),
+    url("assets/website/lui-texture.jpg") center / cover no-repeat;
   filter: blur(1.5rem);
   opacity: 0.88;
 }

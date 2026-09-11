@@ -10,26 +10,26 @@
     <title>WTH Is This? — Get Your Lui</title>
     <link
       rel="preload"
-      href="assets/website/lui-landing-base.png"
+      href="assets/website/lui-landing-base.svg"
       as="image"
-      type="image/png"
+      type="image/svg+xml"
       fetchpriority="high"
     />
+    <link rel="preload" href="assets/website/lui-texture.jpg" as="image" type="image/jpeg" />
+    <link rel="preload" href="assets/website/lui-2x.webp" as="image" type="image/webp" />
     <link rel="stylesheet" href="site.css" />
     <script src="site.js" defer></script>
   </head>
   <body>
     <main class="artboard" id="artboard">
-      <img
+      <object
         class="original-design"
-        src="assets/website/lui-landing-base.png"
-        alt="Lui, your most trustable AI assistant, designed by Anandhu and Abhijith"
+        data="assets/website/lui-landing-base.svg"
+        type="image/svg+xml"
+        aria-label="Lui, your most trustable AI assistant, designed by Anandhu and Abhijith"
         width="1920"
         height="1080"
-        decoding="sync"
-        fetchpriority="high"
-        draggable="false"
-      />
+      ></object>
 
       <a
         class="lui-hit-area"
