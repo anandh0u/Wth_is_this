@@ -26,6 +26,7 @@ body {
 body::before {
   content: "";
   position: fixed;
+  z-index: 0;
   inset: -2rem;
   background:
     radial-gradient(circle at 85% 15%, rgba(66, 43, 58, 0.7), transparent 44%),
@@ -33,10 +34,12 @@ body::before {
     url("assets/website/lui-texture.jpg") center / cover no-repeat;
   filter: blur(0.55rem);
   opacity: 0.72;
+  pointer-events: none;
 }
 
 .artboard {
   position: relative;
+  z-index: 1;
   width: min(100vw, 177.7778svh);
   aspect-ratio: 16 / 9;
   overflow: hidden;
