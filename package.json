@@ -1,6 +1,6 @@
 {
   "name": "wth-is-this",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "productName": "WTH Is This",
   "description": "An anti-productivity desktop pet with browser privileges.",
@@ -8,12 +8,32 @@
   "scripts": {
     "start": "electron .",
     "check": "node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/renderer.js && node --check desktop/pet.js && node --check desktop/audio.js && node --check desktop/ai/lui-engine.js && node --check desktop/panels/panels.js && node --check extension/background.js && node --check extension/content.js && node --check extension/popup.js",
-    "test": "node --test"
+    "test": "node --test",
+    "dist:win": "electron-builder --win portable --x64"
   },
   "devDependencies": {
-    "electron": "^44.3.0"
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "ws": "^8.18.3"
+  },
+  "build": {
+    "appId": "com.wthisthis.lui",
+    "productName": "WTH Is This",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**/*",
+      "assets/**/*",
+      "extension/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "artifactName": "WTH-Is-This-${version}-portable.${ext}"
+    }
   }
 }

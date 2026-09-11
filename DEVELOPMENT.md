@@ -31,9 +31,21 @@ The application menu provides temporary access to the functional modules:
 2. Enable **Developer mode**.
 3. Choose **Load unpacked**.
 4. Select this repository's `extension` directory.
-5. Keep the desktop app running; its connection label changes to `connected`.
+5. Open the extension popup and choose **Connect desktop**.
+6. Approve Chrome's local-network prompt. Keep the desktop app running; its
+   connection label changes to `connected`.
 
 The extension talks only to `ws://127.0.0.1:17381`.
+
+## Build the Windows demo
+
+```powershell
+npm run dist:win
+```
+
+The portable executable is written to `dist/`. The Chrome extension remains a
+separate unpacked folder because Chrome does not allow a desktop executable to
+silently install an extension.
 
 ## Current safety defaults
 
