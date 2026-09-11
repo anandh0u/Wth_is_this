@@ -32,7 +32,7 @@ let state = {
     sleepPranksEnabled: false,
     localAiEnabled: true,
   },
-  ai: { available: false, running: false, model: "qwen3:1.7b" },
+  ai: { available: false, running: false, model: "gemma3:270m" },
   eventLog: ["The creature has awakened."],
 };
 

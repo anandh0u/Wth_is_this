@@ -1,12 +1,19 @@
 const DEFAULT_ENDPOINT = "http://127.0.0.1:11434";
-const DEFAULT_MODEL = "qwen3:1.7b";
+const DEFAULT_MODEL = "gemma3:270m";
 const ACTIONS = new Set(["none", "open_meme", "close_active", "void_todo"]);
+const RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    verdict: { type: "string", enum: ["like", "dislike"] },
+    line: { type: "string" },
+    action: { type: "string", enum: [...ACTIONS] },
+  },
+  required: ["verdict", "line", "action"],
+};
 
-const SYSTEM_PROMPT = `You are Lui, a cute but petty anti-productivity desktop pet.
-Judge the user's activity in one short, funny sentence. You may suggest one harmless action.
-Never target passwords, payments, unsaved work, accounts, meetings in progress, or local development.
-Return JSON only with keys: verdict (like or dislike), line (maximum 90 characters), action
-(none, open_meme, close_active, or void_todo).`;
+const SYSTEM_PROMPT = `You are Lui, a petty funny anti-productivity desktop pet.
+The line must be a sarcastic reaction under 12 words and must not repeat the user text.
+Never target passwords, payments, accounts, meetings, or local development. Choose only a safe action.`;
 
 function simpleHash(text) {
   let hash = 0;
@@ -15,13 +22,37 @@ function simpleHash(text) {
 }
 
 function sanitizeDecision(input, source = "local") {
-  const verdict = input?.verdict === "like" ? "like" : "dislike";
-  const line = String(input?.line || "Lui has formed an opinion and refuses to explain it.")
+  const normalized = Object.fromEntries(
+    Object.entries(input || {}).map(([key, value]) => [key.toLowerCase(), value]),
+  );
+  const verdict = normalized.verdict === "like" ? "like" : "dislike";
+  const line = String(normalized.line || "Lui has formed an opinion and refuses to explain it.")
     .replace(/[\r\n]+/g, " ")
     .trim()
     .slice(0, 90);
-  const action = ACTIONS.has(input?.action) ? input.action : "none";
+  const action = ACTIONS.has(normalized.action) ? normalized.action : "none";
   return { verdict, line, action, source };
+}
+
+function restrictDecision(decision, kind) {
+  const allowedByKind = {
+    todo: new Set(["none", "void_todo"]),
+    boredom: new Set(["none", "open_meme", "close_active"]),
+    activity: new Set(["none", "open_meme", "close_active"]),
+    manual: ACTIONS,
+  };
+  const allowed = allowedByKind[kind] || new Set(["none"]);
+  return allowed.has(decision.action) ? decision : { ...decision, action: "none" };
+}
+
+function replaceEchoedLine(decision, context) {
+  const normalize = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const line = normalize(decision.line);
+  const input = normalize(context.text);
+  if (!line || (input && (input.includes(line) || line.includes(input)))) {
+    return { ...decision, line: fallbackDecision(context).line, source: `${decision.source}+rules` };
+  }
+  return decision;
 }
 
 function fallbackDecision(context) {
@@ -63,7 +94,7 @@ function parseModelContent(content) {
 async function localDecision(context, options = {}) {
   const endpoint = options.endpoint || process.env.WTH_OLLAMA_URL || DEFAULT_ENDPOINT;
   const model = options.model || process.env.WTH_OLLAMA_MODEL || DEFAULT_MODEL;
-  const timeoutMs = options.timeoutMs || 8000;
+  const timeoutMs = options.timeoutMs || 20000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -75,8 +106,8 @@ async function localDecision(context, options = {}) {
       body: JSON.stringify({
         model,
         stream: false,
-        format: "json",
-        options: { temperature: 0.8, num_predict: 100 },
+        format: RESPONSE_SCHEMA,
+        options: { temperature: 0.6, num_predict: 160 },
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: JSON.stringify(context) },
@@ -92,11 +123,11 @@ async function localDecision(context, options = {}) {
 }
 
 async function decide(context, options = {}) {
-  if (options.localAiEnabled === false) return fallbackDecision(context);
+  if (options.localAiEnabled === false) return restrictDecision(fallbackDecision(context), context.kind);
   try {
-    return await localDecision(context, options);
+    return restrictDecision(replaceEchoedLine(await localDecision(context, options), context), context.kind);
   } catch {
-    return fallbackDecision(context);
+    return restrictDecision(fallbackDecision(context), context.kind);
   }
 }
 
@@ -118,4 +149,4 @@ async function getStatus(options = {}) {
   }
 }
 
-module.exports = { decide, fallbackDecision, getStatus, parseModelContent, sanitizeDecision };
+module.exports = { decide, fallbackDecision, getStatus, parseModelContent, replaceEchoedLine, restrictDecision, sanitizeDecision };

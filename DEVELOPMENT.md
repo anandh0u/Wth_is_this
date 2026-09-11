@@ -62,13 +62,13 @@ When available, the app asks the local model for a restricted JSON verdict; the
 application—not the model—enforces the allowed action list and safety gates.
 
 ```powershell
-ollama pull qwen3:1.7b
+ollama pull gemma3:270m
 npm start
 ```
 
 Optional environment overrides:
 
 ```powershell
-$env:WTH_OLLAMA_MODEL = 'qwen3:1.7b'
+$env:WTH_OLLAMA_MODEL = 'gemma3:270m'
 $env:WTH_OLLAMA_URL = 'http://127.0.0.1:11434'
 ```
