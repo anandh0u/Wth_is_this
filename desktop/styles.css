@@ -1,24 +1,14 @@
-:root { font-family: system-ui, sans-serif; color: #f4f1ea; background: #17161b; }
-* { box-sizing: border-box; }
-body { margin: 0; }
-main { padding: 18px; }
-header { position: relative; }
-h1 { margin: 0; }
-h2 { font-size: 1rem; margin-bottom: 8px; }
-section { margin: 18px 0; padding: 14px; border: 1px solid #3a3742; border-radius: 12px; }
-.connection { float: right; color: #f0b35d; }
-.connection.connected { color: #63dc8c; }
-.pet-stage { text-align: center; }
-.pet { width: 110px; height: 110px; margin: auto; display: grid; place-items: center; border-radius: 40%; background: #7027c9; font-size: 64px; transition: transform .2s, background .2s; }
-.pet.annoyed { background: #bb5a19; transform: rotate(-4deg); }
-.pet.chaotic { background: #d52c4b; transform: rotate(5deg) scale(1.08); }
-.meter { height: 8px; margin-top: 12px; overflow: hidden; border-radius: 10px; background: #34313b; }
-.meter span { display: block; width: 0; height: 100%; background: #dd4464; transition: width .3s; }
-form { display: flex; gap: 8px; }
-input { flex: 1; min-width: 0; padding: 9px; }
-button { padding: 8px 10px; cursor: pointer; }
-ul, ol { padding-left: 22px; }
-li { margin: 6px 0; }
-li.void { opacity: .45; text-decoration: line-through; }
-.actions { display: flex; flex-wrap: wrap; gap: 6px; }
-.tab { overflow-wrap: anywhere; color: #bbb4c7; }
+@import url("../styles.css");
+
+body { min-width: 360px; }
+.topbar, main { max-width: 100%; }
+.topbar { height: 72px; padding: 0 24px; }
+main { min-height: auto; padding: 26px 24px 42px; }
+h1, h2 { font: 700 49px/.96 "Playfair Display", serif; letter-spacing: -.06em; margin: 0; }
+.lede { margin-bottom: 28px; }
+.lui-orb { position: relative; top: auto; right: auto; margin: 0 0 35px auto; width: 126px; height: 126px; box-shadow: 8px 8px 0 rgba(69,27,37,.13); }
+.lui-orb span { font-size: 52px; }.lui-orb em { bottom: 15px; }
+.home-actions { margin-top: 0; grid-template-columns: 1fr 1fr; gap: 11px; }.feature,.feature:nth-child(n){grid-column:span 1;min-height:112px;padding:14px}.feature:nth-child(5){grid-column:span 2}.feature b{font-size:14px}.feature-icon{font-size:23px}
+.graph-layout { grid-template-columns: 1fr; gap: 20px; margin-top: 28px; }.mood-chart { height: 300px; }.mood-note { padding: 20px; }
+.chat-shell { margin-top: 26px; }.messages { min-height: 250px; max-height: 330px; }.task-form { margin-top: 28px; padding: 22px; }.task-row { padding: 14px; }.detail-card { margin-top: 28px; padding: 25px; }
+.connection { font: 10px "DM Mono"; color: var(--ink); }.connection.connected::before { content: "● "; color: var(--sage); }

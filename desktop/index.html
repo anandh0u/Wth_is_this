@@ -4,10 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lui</title>
-    <script>
-      // Keep the desktop entry point while presenting the redesigned Lui workspace.
-      window.location.replace("../index.html");
-    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body></body>
+  <body>
+    <header class="topbar"><button class="brand" data-view="home"><span class="brand-mark">l</span>lui</button><span id="connection" class="connection">waiting</span></header>
+    <main>
+      <section class="view active" id="home"><p class="eyebrow">YOUR SOFT CORNER OF THE DAY</p><h1>hello, <i>friend.</i></h1><p class="lede" id="pet-line">Lui keeps your small plans, big feelings and loose thoughts together.</p><div class="lui-orb"><span id="pet">◡</span><em id="mood">content</em></div><div class="home-actions"><button class="feature card-graph" data-view="graph"><span class="feature-icon">◌</span><span><b>Lui graph</b><small>check in with lui</small></span><i>↗</i></button><button class="feature card-chat" data-view="chat"><span class="feature-icon">✦</span><span><b>Lui GPT</b><small>talk it out</small></span><i>↗</i></button><button class="feature card-assign" data-view="schedule"><span class="feature-icon">＋</span><span><b>Assign task</b><small>make a gentle plan</small></span><i>↗</i></button><button class="feature card-schedule" data-view="tasks" data-list="scheduled"><span class="feature-icon">▤</span><span><b>Schedules</b><small>your upcoming days</small></span><i>↗</i></button><button class="feature card-void" data-view="tasks" data-list="void"><span class="feature-icon">⌁</span><span><b>Voids</b><small>make room for later</small></span><i>↗</i></button></div></section>
+      <section class="view" id="graph"><button class="back" data-view="home">← back</button><p class="eyebrow">LUI'S INNER WEATHER</p><h2>mood <i>graph</i></h2><div class="graph-layout"><div class="mood-chart"><div class="axis horizontal"></div><div class="axis vertical"></div><button class="mood-dot" data-mood="happy" style="left:74%;top:23%">☺</button><button class="mood-dot" data-mood="annoyed" style="left:25%;top:23%">ಠ_ಠ</button><button class="mood-dot" data-mood="sad" style="left:25%;top:72%">☹</button><button class="mood-dot" data-mood="scared" style="left:74%;top:72%">◉_◉</button></div><aside class="mood-note"><span id="mood-emoji">☺</span><p class="eyebrow">RIGHT NOW, LUI IS</p><h3 id="mood-title">feeling bright</h3><p id="mood-copy">There is a little extra sparkle in the room today.</p></aside></div></section>
+      <section class="view" id="chat"><button class="back" data-view="home">← back</button><p class="eyebrow">A QUIET CHAT WITH LUI</p><h2>what's on your <i>mind?</i></h2><div class="chat-shell"><div class="chat-status">lui is here with you</div><div class="messages" id="messages"><article class="message lui-message"><span class="avatar">l</span><p>Hi, friend. What would feel good to talk through?</p></article></div><form class="chat-compose" id="chat-form"><input id="chat-input" placeholder="write to lui..." required /><button>↑</button></form></div></section>
+      <section class="view" id="schedule"><button class="back" data-view="home">← back</button><p class="eyebrow">MAKE A GENTLE PLAN</p><h2>assign a <i>task.</i></h2><form class="task-form" id="task-form"><label>What is it?<input name="name" required placeholder="e.g. Call grandma" /></label><div class="form-row"><label>When?<input name="date" type="date" required /></label><label>What time?<input name="time" type="time" required /></label></div><button class="primary-button">save this for me <span>→</span></button></form></section>
+      <section class="view" id="tasks"><button class="back" data-view="home">← back</button><p class="eyebrow" id="list-kicker">YOUR UPCOMING DAYS</p><h2 id="list-title">little <i>plans.</i></h2><div class="list-tabs"><button class="tab active" data-list-tab="scheduled">schedules</button><button class="tab" data-list-tab="void">voids</button></div><div class="task-list" id="task-list"></div></section>
+      <section class="view" id="detail"><button class="back" data-view="tasks">← back to list</button><p class="eyebrow">A LITTLE REMINDER</p><h2>task <i>details.</i></h2><article class="detail-card" id="detail-card"></article></section>
+    </main><script src="renderer.js"></script>
+  </body>
 </html>
