@@ -140,14 +140,14 @@ async function handle(message) {
     try {
       await chrome.tabs.sendMessage(tab.id, {
         type: "pet_visit",
-        imageUrl: chrome.runtime.getURL("icon.png"),
+        imageUrl: chrome.runtime.getURL("lui-sprite.png"),
         line: message.payload?.line,
       });
     } catch {
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
       await chrome.tabs.sendMessage(tab.id, {
         type: "pet_visit",
-        imageUrl: chrome.runtime.getURL("icon.png"),
+        imageUrl: chrome.runtime.getURL("lui-sprite.png"),
         line: message.payload?.line,
       });
     }

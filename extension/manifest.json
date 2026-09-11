@@ -15,7 +15,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icon.png"],
+      "resources": ["icon.png", "lui-sprite.png"],
       "matches": ["http://*/*", "https://*/*"]
     }
   ],

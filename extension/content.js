@@ -56,8 +56,7 @@ chrome.runtime.onMessage.addListener((message, _sender, respond) => {
       width: "130px",
       height: "130px",
       margin: "4px auto 0",
-      objectFit: "cover",
-      borderRadius: "38px",
+      objectFit: "contain",
       filter: "drop-shadow(0 5px 4px #0008)",
     });
     shadow.append(bubble, image);
