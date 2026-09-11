@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 
-const SUPPORTED = new Set([".mp3", ".wav", ".ogg", ".m4a"]);
+const SUPPORTED = new Set([".mp3", ".mpeg", ".wav", ".ogg", ".m4a"]);
 
 function listAudio(assetRoot) {
   const directory = path.join(assetRoot, "memes");

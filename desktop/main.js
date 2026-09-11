@@ -1,17 +1,25 @@
-const { app, BrowserWindow, ipcMain, Menu, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Notification, screen } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const http = require("http");
 const { WebSocketServer } = require("ws");
 const { decide: decideAsLui, getStatus: getAiStatus } = require("./ai/lui-engine");
 const { randomAudioUrl } = require("./audio");
 
 const PORT = 17381;
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 let mainWindow;
+let petWindow;
 let extensionSocket;
 let stateFile;
 let tickTimer;
 let reminderTimer;
 let aiStatusTimer;
+let petMovementTimer;
+let bridgeHeartbeatTimer;
+let petX = 0;
+let petDirection = -1;
+let petStep = 0;
 let luiDecisionInFlight = false;
 let lastLuiDecisionAt = 0;
 const panelWindows = new Map();
@@ -31,6 +39,7 @@ let state = {
     chaosEnabled: false,
     sleepPranksEnabled: false,
     localAiEnabled: true,
+    petWalkingEnabled: true,
   },
   ai: { available: false, running: false, model: "gemma3:270m" },
   eventLog: ["The creature has awakened."],
@@ -72,6 +81,9 @@ function broadcastState() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send("state", state);
   }
+  if (petWindow && !petWindow.isDestroyed()) {
+    petWindow.webContents.send("state", state);
+  }
 }
 
 function sendToExtension(type, payload = {}) {
@@ -108,6 +120,8 @@ function performDecisionAction(decision, context) {
     playRandomMemeAudio();
   } else if (decision.action === "close_active") {
     sendToExtension("close_active");
+  } else if (decision.action === "pet_visit") {
+    sendToExtension("pet_visit", { line: decision.line });
   } else if (decision.action === "void_todo") {
     const todo = state.todos.find((item) => item.id === context.todoId && item.status === "alive") ||
       state.todos.find((item) => item.status === "alive");
@@ -154,7 +168,20 @@ function maybeAutomaticDecision() {
 }
 
 function startBridge() {
-  const server = new WebSocketServer({ host: "127.0.0.1", port: PORT });
+  const httpServer = http.createServer((request, response) => {
+    if (request.url === "/health") {
+      response.writeHead(204, {
+        "access-control-allow-origin": "*",
+        "cache-control": "no-store",
+      });
+      response.end();
+      return;
+    }
+    response.writeHead(404);
+    response.end();
+  });
+  const server = new WebSocketServer({ server: httpServer });
+  httpServer.listen(PORT, "127.0.0.1");
   server.on("connection", (socket) => {
     extensionSocket = socket;
     state.connection = "connected";
@@ -206,6 +233,68 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, "index.html"));
 }
 
+function createPetWindow() {
+  const workArea = screen.getPrimaryDisplay().workArea;
+  petX = workArea.x + workArea.width - 180;
+  const y = workArea.y + workArea.height - 180;
+  petWindow = new BrowserWindow({
+    width: 170,
+    height: 170,
+    x: petX,
+    y,
+    transparent: true,
+    frame: false,
+    resizable: false,
+    hasShadow: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    icon: path.join(assetRoot, "lui-meme-icon.png"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  petWindow.setAlwaysOnTop(true, "screen-saver");
+  petWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  petWindow.loadFile(path.join(__dirname, "pet.html"));
+  if (!state.settings.petEnabled) petWindow.hide();
+}
+
+function movePet() {
+  if (!petWindow || petWindow.isDestroyed() || !state.settings.petEnabled || !state.settings.petWalkingEnabled) return;
+  const workArea = screen.getDisplayNearestPoint({ x: petX, y: 0 }).workArea;
+  petX += petDirection * (state.mood === "chaotic" ? 5 : 2);
+  const minimumX = workArea.x;
+  const maximumX = workArea.x + workArea.width - 170;
+  if (petX <= minimumX || petX >= maximumX) {
+    petDirection *= -1;
+    petX = Math.max(minimumX, Math.min(maximumX, petX));
+    petWindow.webContents.send("direction", petDirection);
+  }
+  petStep += 0.16;
+  const bounce = Math.round(Math.abs(Math.sin(petStep)) * 10);
+  const y = workArea.y + workArea.height - 170 - bounce;
+  petWindow.setPosition(Math.round(petX), y, false);
+}
+
+function runDemoSequence() {
+  state.boredom = 82;
+  state.petLine = "Demo mode: I am about to make a professional mistake.";
+  log("Demo mode started.");
+  broadcastState();
+  setTimeout(() => {
+    sendToExtension("pet_visit", { line: "I have entered your browser without knocking." });
+    playRandomMemeAudio();
+  }, 1800);
+  setTimeout(() => sendToExtension("open_meme"), 3800);
+  setTimeout(() => {
+    state.boredom = 10;
+    state.petLine = "Excellent. Your productivity has been successfully interrupted.";
+    broadcastState();
+  }, 5000);
+}
+
 function openPanel(name) {
   if (!["todos", "notes", "calendar"].includes(name)) return;
   const existing = panelWindows.get(name);
@@ -232,6 +321,9 @@ function openPanel(name) {
 function updateSetting(key, value) {
   if (!(key in state.settings)) return;
   state.settings[key] = Boolean(value);
+  if (key === "petEnabled" && petWindow && !petWindow.isDestroyed()) {
+    state.settings[key] ? petWindow.showInactive() : petWindow.hide();
+  }
   saveState();
   syncExtensionConfig();
   log(`${key} is now ${state.settings[key] ? "enabled" : "disabled"}.`);
@@ -247,9 +339,12 @@ function buildMenu() {
         { label: "Allow browser chaos", type: "checkbox", checked: state.settings.chaosEnabled, click: (item) => updateSetting("chaosEnabled", item.checked) },
         { label: "Allow sleep pranks", type: "checkbox", checked: state.settings.sleepPranksEnabled, click: (item) => updateSetting("sleepPranksEnabled", item.checked) },
         { label: "Use local AI when available", type: "checkbox", checked: state.settings.localAiEnabled, click: (item) => updateSetting("localAiEnabled", item.checked) },
+        { label: "Let Lui walk", type: "checkbox", checked: state.settings.petWalkingEnabled, click: (item) => updateSetting("petWalkingEnabled", item.checked) },
         { type: "separator" },
         { label: "Judge me now", accelerator: "CmdOrCtrl+J", click: () => void runLuiDecision({ kind: "manual", text: "The user explicitly requested judgment." }) },
         { label: "Play local meme audio", click: playRandomMemeAudio },
+        { label: "Visit current Chrome tab", click: () => sendToExtension("pet_visit", { line: state.petLine }) },
+        { label: "Run 5-second demo", accelerator: "CmdOrCtrl+D", click: runDemoSequence },
         { type: "separator" },
         { label: "Stop being sentient", click: () => {
           updateSetting("chaosEnabled", false);
@@ -296,6 +391,7 @@ app.whenReady().then(() => {
   loadState();
   startBridge();
   createWindow();
+  createPetWindow();
   buildMenu();
   tickTimer = setInterval(() => {
     state.boredom = Math.min(100, state.boredom + 2);
@@ -305,6 +401,12 @@ app.whenReady().then(() => {
   reminderTimer = setInterval(checkReminders, 5000);
   void refreshAiStatus();
   aiStatusTimer = setInterval(refreshAiStatus, 30000);
+  petMovementTimer = setInterval(movePet, 45);
+  bridgeHeartbeatTimer = setInterval(() => {
+    if (extensionSocket && extensionSocket.readyState === extensionSocket.OPEN) {
+      extensionSocket.send(JSON.stringify({ type: "heartbeat", payload: { at: Date.now() } }));
+    }
+  }, 20000);
 });
 
 app.on("window-all-closed", () => app.quit());
@@ -312,6 +414,8 @@ app.on("before-quit", () => {
   clearInterval(tickTimer);
   clearInterval(reminderTimer);
   clearInterval(aiStatusTimer);
+  clearInterval(petMovementTimer);
+  clearInterval(bridgeHeartbeatTimer);
 });
 
 ipcMain.handle("get-state", () => state);
@@ -393,7 +497,7 @@ ipcMain.handle("void-todo", (_event, id) => {
   return state;
 });
 ipcMain.handle("browser-action", (_event, action) => {
-  const allowed = new Set(["close_active", "undo_close", "open_meme"]);
+  const allowed = new Set(["close_active", "undo_close", "open_meme", "pet_visit"]);
   if (allowed.has(action)) sendToExtension(action);
   return state;
 });
@@ -410,3 +514,10 @@ ipcMain.handle("ai-status", async () => {
   return state.ai;
 });
 ipcMain.handle("play-meme-audio", () => playRandomMemeAudio());
+ipcMain.handle("pet-click", () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+  return true;
+});

@@ -1,6 +1,6 @@
 const DEFAULT_ENDPOINT = "http://127.0.0.1:11434";
 const DEFAULT_MODEL = "gemma3:270m";
-const ACTIONS = new Set(["none", "open_meme", "close_active", "void_todo"]);
+const ACTIONS = new Set(["none", "open_meme", "close_active", "void_todo", "pet_visit"]);
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
@@ -37,8 +37,8 @@ function sanitizeDecision(input, source = "local") {
 function restrictDecision(decision, kind) {
   const allowedByKind = {
     todo: new Set(["none", "void_todo"]),
-    boredom: new Set(["none", "open_meme", "close_active"]),
-    activity: new Set(["none", "open_meme", "close_active"]),
+    boredom: new Set(["none", "open_meme", "close_active", "pet_visit"]),
+    activity: new Set(["none", "open_meme", "close_active", "pet_visit"]),
     manual: ACTIONS,
   };
   const allowed = allowedByKind[kind] || new Set(["none"]);
@@ -69,7 +69,7 @@ function fallbackDecision(context) {
 
   const choices = context.kind === "todo"
     ? ["none", "void_todo", "none"]
-    : ["open_meme", "none", "close_active", "none"];
+    : ["open_meme", "pet_visit", "close_active", "none"];
   const action = choices[simpleHash(text) % choices.length];
   const lines = [
     "I watched you work. I would like those minutes back.",

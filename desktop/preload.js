@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld("wth", {
   askLui: (context) => ipcRenderer.invoke("ask-lui", context),
   getAiStatus: () => ipcRenderer.invoke("ai-status"),
   playMemeAudio: () => ipcRenderer.invoke("play-meme-audio"),
+  petClick: () => ipcRenderer.invoke("pet-click"),
   onState: (callback) => ipcRenderer.on("state", (_event, state) => callback(state)),
   onMemeAudio: (callback) => ipcRenderer.on("meme-audio", (_event, url) => callback(url)),
+  onDirection: (callback) => ipcRenderer.on("direction", (_event, direction) => callback(direction)),
 });

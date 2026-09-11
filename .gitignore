@@ -1,4 +1,5 @@
 node_modules/
 .wth-state.json
 dist/
-
+assets/memes/*
+!assets/memes/.gitkeep

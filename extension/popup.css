@@ -1,0 +1,13 @@
+:root { font: 14px system-ui; color: #fff9e9; background: #17161b; }
+body { width: 260px; margin: 0; padding: 14px; }
+header { display: flex; align-items: center; gap: 10px; }
+header img { width: 48px; height: 48px; border-radius: 14px; }
+header strong, header span { display: block; }
+#status { margin-top: 2px; color: #f0b35d; font-size: 12px; }
+#status.connected { color: #63dc8c; }
+#hint { min-height: 34px; color: #c6bfcd; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+button { padding: 9px 6px; border: 1px solid #6d6577; border-radius: 8px; color: inherit; background: #2b2732; cursor: pointer; }
+button:hover { background: #7027c9; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.fine { margin-bottom: 0; color: #8f8898; font-size: 11px; }

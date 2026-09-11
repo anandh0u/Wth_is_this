@@ -21,6 +21,8 @@ The application menu provides temporary access to the functional modules:
 - `Ctrl+1`: todos
 - `Ctrl+2`: notes
 - `Ctrl+3`: calendar
+- `Ctrl+J`: ask Lui for an immediate local-AI verdict
+- `Ctrl+D`: run the five-second demo sequence
 - `Lui`: behavior and safety switches
 
 ## Load the Chrome extension
@@ -38,6 +40,8 @@ The extension talks only to `ws://127.0.0.1:17381`.
 - Manual meme and tab-prank buttons work when the extension is connected.
 - Automatic browser chaos is off by default.
 - Sleep pranks are off by default.
+- The desktop pet walks across the primary work area and can visibly visit the
+  current Chrome webpage.
 - Enabling both switches lets Lui open one of the approved videos after Chrome
   reports the user idle, with a ten-minute cooldown.
 - Pinned, internal, account, localhost, and edited-form tabs cannot be closed.
