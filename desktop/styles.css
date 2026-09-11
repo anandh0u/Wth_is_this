@@ -1,14 +1,5 @@
 @import url("../styles.css");
 
-body { min-width: 360px; }
-.topbar, main { max-width: 100%; }
-.topbar { height: 72px; padding: 0 24px; }
-main { min-height: auto; padding: 26px 24px 42px; }
-h1, h2 { font: 700 49px/.96 "Playfair Display", serif; letter-spacing: -.06em; margin: 0; }
-.lede { margin-bottom: 28px; }
-.lui-orb { position: relative; top: auto; right: auto; margin: 0 0 35px auto; width: 126px; height: 126px; box-shadow: 8px 8px 0 rgba(69,27,37,.13); }
-.lui-orb span { font-size: 52px; }.lui-orb em { bottom: 15px; }
-.home-actions { margin-top: 0; grid-template-columns: 1fr 1fr; gap: 11px; }.feature,.feature:nth-child(n){grid-column:span 1;min-height:112px;padding:14px}.feature:nth-child(5){grid-column:span 2}.feature b{font-size:14px}.feature-icon{font-size:23px}
-.graph-layout { grid-template-columns: 1fr; gap: 20px; margin-top: 28px; }.mood-chart { height: 300px; }.mood-note { padding: 20px; }
-.chat-shell { margin-top: 26px; }.messages { min-height: 250px; max-height: 330px; }.task-form { margin-top: 28px; padding: 22px; }.task-row { padding: 14px; }.detail-card { margin-top: 28px; padding: 25px; }
-.connection { font: 10px "DM Mono"; color: var(--ink); }.connection.connected::before { content: "● "; color: var(--sage); }
+html, body { min-width: 660px; }
+
+.home-view { width: min(100%, 674px); }

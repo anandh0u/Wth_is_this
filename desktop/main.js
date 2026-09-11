@@ -251,10 +251,11 @@ function startBridge() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 430,
-    height: 680,
-    minWidth: 360,
-    minHeight: 520,
+    width: 824,
+    height: 464,
+    minWidth: 660,
+    minHeight: 420,
+    useContentSize: true,
     alwaysOnTop: false,
     icon: path.join(__dirname, "..", "assets", "lui-meme-icon.png"),
     webPreferences: {
@@ -275,6 +276,7 @@ function createPetWindow() {
   petX = workArea.x + workArea.width - 180;
   const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
   petWindow = new BrowserWindow({
+    title: "Lui Pet",
     width: 170,
     height: 170,
     x: petX,

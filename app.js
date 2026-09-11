@@ -1,74 +1,139 @@
-const views = [...document.querySelectorAll('.view')];
-const tasks = [
-  { id: 1, name: 'Pick up some flowers', date: '2026-09-14', time: '17:30', void: false },
-  { id: 2, name: 'Read by the window', date: '2026-09-16', time: '19:00', void: false },
-  { id: 3, name: 'Learn a new language', date: '2026-09-10', time: '09:00', void: true },
+const views = [...document.querySelectorAll(".view")];
+const taskList = document.querySelector("#task-list");
+const dateInput = document.querySelector('input[name="date"]');
+const timeInput = document.querySelector('input[name="time"]');
+const moodStatus = document.querySelector("#mood-status");
+let activeList = "scheduled";
+let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let tasks = [
+  { id: "demo-1", title: "Task1", startsAt: "2026-09-13T10:00", status: "scheduled" },
+  { id: "demo-2", title: "Task2", startsAt: "2026-09-14T13:00", status: "scheduled" },
+  { id: "demo-3", title: "Task3", startsAt: "2026-09-15T17:00", status: "scheduled" },
 ];
-let activeList = 'schedule';
-let selectedTask = null;
 
-function showView(id) {
-  views.forEach((view) => view.classList.toggle('active', view.id === id));
-  if (id === 'tasks') renderTasks();
-  if (id === 'detail') renderDetail();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function todayValue() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
-function formatDate(date) {
-  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(`${date}T12:00:00`));
+function showView(id) {
+  views.forEach((view) => view.classList.toggle("active", view.id === id));
+  if (id === "tasks") renderTasks();
+  if (id === "schedule") renderCalendar();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function makeTaskRow(task) {
+  const button = document.createElement("button");
+  button.className = "task-row";
+  button.type = "button";
+  button.title = task.status === "void" ? "Restore this task" : "Send this task to void";
+  button.textContent = task.title;
+  button.addEventListener("click", () => {
+    task.status = task.status === "void" ? "scheduled" : "void";
+    renderTasks();
+  });
+  return button;
 }
 
 function renderTasks() {
-  const isVoid = activeList === 'void';
-  document.querySelector('#list-kicker').textContent = isVoid ? 'THINGS YOU CAN RETURN TO' : 'YOUR UPCOMING DAYS';
-  document.querySelector('#list-title').innerHTML = isVoid ? 'the <i>void.</i>' : 'little <i>plans.</i>';
-  document.querySelectorAll('[data-list-tab]').forEach((tab) => tab.classList.toggle('active', tab.dataset.listTab === activeList));
-  const visible = tasks.filter((task) => task.void === isVoid);
-  document.querySelector('#task-list').replaceChildren(...(visible.length ? visible.map((task) => {
-    const [month, day] = formatDate(task.date).split(' ');
-    const row = document.createElement('article');
-    row.className = 'task-row';
-    row.innerHTML = `<div class="task-date">${month}<b>${day}</b></div><div><h3>${task.name}</h3><p>${task.time} · ${task.void ? 'waiting gently' : 'saved for you'}</p></div><span class="task-arrow">→</span>`;
-    row.addEventListener('click', () => { selectedTask = task; showView('detail'); });
-    return row;
-  }) : [Object.assign(document.createElement('p'), { className: 'empty', textContent: isVoid ? 'Nothing is waiting in the void.' : 'A wide-open day. Add a little plan.' })]));
+  const visible = tasks.filter((task) => task.status === activeList);
+  taskList.replaceChildren(...(visible.length
+    ? visible.slice(0, 3).map(makeTaskRow)
+    : [Object.assign(document.createElement("p"), { className: "empty", textContent: activeList === "void" ? "The void is quiet." : "No plans yet." })]));
 }
 
-function renderDetail() {
-  if (!selectedTask) return;
-  const card = document.querySelector('#detail-card');
-  card.innerHTML = `<span class="detail-symbol">${selectedTask.void ? '⌁' : '✦'}</span><h3>${selectedTask.name}</h3><div class="detail-meta"><span>date</span><b>${formatDate(selectedTask.date)}</b></div><div class="detail-meta"><span>time</span><b>${selectedTask.time}</b></div><div class="detail-meta"><span>status</span><b>${selectedTask.void ? 'in the void' : 'scheduled'}</b></div>`;
-  const toggle = document.createElement('button');
-  toggle.textContent = selectedTask.void ? 'restore from the void' : 'send to void';
-  toggle.addEventListener('click', () => { selectedTask.void = !selectedTask.void; activeList = selectedTask.void ? 'void' : 'schedule'; showView('tasks'); });
-  card.append(toggle);
+function selectMood(button) {
+  document.querySelectorAll(".mood-target").forEach((target) => target.classList.toggle("is-selected", target === button));
+  moodStatus.textContent = `${button.dataset.mood}: ${button.getAttribute("aria-label")}`;
 }
 
-document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => {
+function renderCalendar() {
+  const grid = document.querySelector("#calendar-grid");
+  const heading = document.querySelector("#calendar-title");
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  heading.textContent = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(calendarMonth);
+  const startDay = new Date(year, month, 1).getDay();
+  const numberOfDays = new Date(year, month + 1, 0).getDate();
+  const selected = dateInput.value;
+  const today = todayValue();
+  const cells = [];
+  for (let index = 0; index < startDay; index += 1) cells.push(Object.assign(document.createElement("span"), { className: "calendar-blank" }));
+  for (let day = 1; day <= numberOfDays; day += 1) {
+    const value = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = day;
+    button.classList.toggle("is-selected", value === selected);
+    button.classList.toggle("is-today", value === today);
+    button.addEventListener("click", () => { dateInput.value = value; renderCalendar(); });
+    cells.push(button);
+  }
+  grid.replaceChildren(...cells);
+}
+
+function appendMessage(text, kind) {
+  const message = document.createElement("article");
+  message.className = `message ${kind}-message`;
+  const copy = document.createElement("p");
+  copy.textContent = text;
+  message.append(copy);
+  document.querySelector("#messages").append(message);
+}
+
+document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => {
   if (button.dataset.list) activeList = button.dataset.list;
   showView(button.dataset.view);
 }));
-document.querySelectorAll('[data-list-tab]').forEach((button) => button.addEventListener('click', () => { activeList = button.dataset.listTab; renderTasks(); }));
 
-const moods = {
-  happy: ['☺', 'feeling bright', 'There is a little extra sparkle in the room today.'],
-  annoyed: ['ಠ_ಠ', 'a bit bothered', 'Lui needs a breath, a snack, and perhaps fewer notifications.'],
-  sad: ['☹', 'feeling tender', 'A quiet day can hold a lot. Let’s take it slowly.'],
-  scared: ['◉_◉', 'feeling unsure', 'The unknown is loud right now. We can make the next step very small.'],
-};
-function setMood(mood) { const [emoji, title, copy] = moods[mood]; document.querySelector('#mood-emoji').textContent = emoji; document.querySelector('#mood-title').textContent = title; document.querySelector('#mood-copy').textContent = copy; }
-document.querySelectorAll('[data-mood]').forEach((dot) => dot.addEventListener('click', () => setMood(dot.dataset.mood)));
-document.querySelector('#random-mood').addEventListener('click', () => setMood(Object.keys(moods)[Math.floor(Math.random() * 4)]));
+document.querySelectorAll("[data-list-tab]").forEach((button) => button.addEventListener("click", () => {
+  activeList = button.dataset.listTab;
+  renderTasks();
+}));
 
-document.querySelector('#task-form').addEventListener('submit', (event) => {
+document.querySelectorAll(".mood-target").forEach((button) => button.addEventListener("click", () => selectMood(button)));
+
+document.querySelector("#calendar-previous").addEventListener("click", () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+  renderCalendar();
+});
+
+document.querySelector("#calendar-next").addEventListener("click", () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+  renderCalendar();
+});
+
+document.querySelector("#task-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
-  tasks.unshift({ id: Date.now(), name: form.get('name'), date: form.get('date'), time: form.get('time'), void: form.get('void') === 'on' });
-  activeList = form.get('void') === 'on' ? 'void' : 'schedule'; event.currentTarget.reset(); showView('tasks');
+  tasks.unshift({ id: String(Date.now()), title: form.get("name").trim(), startsAt: `${form.get("date")}T${form.get("time")}`, status: "scheduled" });
+  event.currentTarget.reset();
+  dateInput.value = todayValue();
+  activeList = "scheduled";
+  showView("tasks");
 });
 
-document.querySelector('#chat-form').addEventListener('submit', (event) => {
-  event.preventDefault(); const input = document.querySelector('#chat-input'); const text = input.value.trim(); if (!text) return;
-  const messages = document.querySelector('#messages'); const user = document.createElement('article'); user.className = 'message user-message'; user.innerHTML = `<p>${text.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char])}</p>`; messages.append(user); input.value = ''; messages.scrollTop = messages.scrollHeight;
-  setTimeout(() => { const reply = document.createElement('article'); reply.className = 'message lui-message'; reply.innerHTML = `<span class="avatar">l</span><p>${text.includes('?') ? 'I think the kindest answer is the one that gives you a little room to breathe.' : 'I hear you. You don’t have to solve it all at once — what is the smallest next thing?'}</p>`; messages.append(reply); messages.scrollTop = messages.scrollHeight; }, 380);
+document.querySelector("#chat-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const input = document.querySelector("#chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  appendMessage(text, "user");
+  input.value = "";
+  const reply = text.includes("?")
+    ? "Lui says the answer is probably a snack and a worse decision."
+    : "Noted. Lui will remember this at the least helpful moment.";
+  appendMessage(reply, "lui");
+  const messages = document.querySelector("#messages");
+  messages.scrollTop = messages.scrollHeight;
 });
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !document.querySelector("#home").classList.contains("active")) showView("home");
+});
+
+dateInput.value = todayValue();
+timeInput.value = "09:00";
+renderCalendar();

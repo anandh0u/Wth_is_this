@@ -6,18 +6,69 @@
     <title>Lui</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="topbar"><button class="brand" data-view="home"><span class="brand-mark">l</span>lui</button><span id="connection" class="connection">waiting</span></header>
-    <main>
-      <section class="view active" id="home"><p class="eyebrow">YOUR SOFT CORNER OF THE DAY</p><h1>hello, <i>friend.</i></h1><p class="lede" id="pet-line">Lui keeps your small plans, big feelings and loose thoughts together.</p><div class="lui-orb"><span id="pet">◡</span><em id="mood">content</em></div><div class="home-actions"><button class="feature card-graph" data-view="graph"><span class="feature-icon">◌</span><span><b>Lui graph</b><small>check in with lui</small></span><i>↗</i></button><button class="feature card-chat" data-view="chat"><span class="feature-icon">✦</span><span><b>Lui GPT</b><small>talk it out</small></span><i>↗</i></button><button class="feature card-assign" data-view="schedule"><span class="feature-icon">＋</span><span><b>Assign task</b><small>make a gentle plan</small></span><i>↗</i></button><button class="feature card-schedule" data-view="tasks" data-list="scheduled"><span class="feature-icon">▤</span><span><b>Schedules</b><small>your upcoming days</small></span><i>↗</i></button><button class="feature card-void" data-view="tasks" data-list="void"><span class="feature-icon">⌁</span><span><b>Voids</b><small>make room for later</small></span><i>↗</i></button></div></section>
-      <section class="view" id="graph"><button class="back" data-view="home">← back</button><p class="eyebrow">LUI'S INNER WEATHER</p><h2>mood <i>graph</i></h2><div class="graph-layout"><div class="mood-chart"><div class="axis horizontal"></div><div class="axis vertical"></div><button class="mood-dot" data-mood="happy" style="left:74%;top:23%">☺</button><button class="mood-dot" data-mood="annoyed" style="left:25%;top:23%">ಠ_ಠ</button><button class="mood-dot" data-mood="sad" style="left:25%;top:72%">☹</button><button class="mood-dot" data-mood="scared" style="left:74%;top:72%">◉_◉</button></div><aside class="mood-note"><span id="mood-emoji">☺</span><p class="eyebrow">RIGHT NOW, LUI IS</p><h3 id="mood-title">feeling bright</h3><p id="mood-copy">There is a little extra sparkle in the room today.</p></aside></div></section>
-      <section class="view" id="chat"><button class="back" data-view="home">← back</button><p class="eyebrow">A QUIET CHAT WITH LUI</p><h2>what's on your <i>mind?</i></h2><div class="chat-shell"><div class="chat-status">lui is here with you</div><div class="messages" id="messages"><article class="message lui-message"><span class="avatar">l</span><p>Hi, friend. What would feel good to talk through?</p></article></div><form class="chat-compose" id="chat-form"><input id="chat-input" placeholder="write to lui..." required /><button>↑</button></form></div></section>
-      <section class="view" id="schedule"><button class="back" data-view="home">← back</button><p class="eyebrow">MAKE A GENTLE PLAN</p><h2>assign a <i>task.</i></h2><form class="task-form" id="task-form"><label>What is it?<input name="name" required placeholder="e.g. Call grandma" /></label><div class="form-row"><label>When?<input name="date" type="date" required /></label><label>What time?<input name="time" type="time" required /></label></div><button class="primary-button">save this for me <span>→</span></button></form></section>
-      <section class="view" id="tasks"><button class="back" data-view="home">← back</button><p class="eyebrow" id="list-kicker">YOUR UPCOMING DAYS</p><h2 id="list-title">little <i>plans.</i></h2><div class="list-tabs"><button class="tab active" data-list-tab="scheduled">schedules</button><button class="tab" data-list-tab="void">voids</button></div><div class="task-list" id="task-list"></div></section>
-      <section class="view" id="detail"><button class="back" data-view="tasks">← back to list</button><p class="eyebrow">A LITTLE REMINDER</p><h2>task <i>details.</i></h2><article class="detail-card" id="detail-card"></article></section>
-    </main><script src="renderer.js"></script>
+    <main class="lui-app">
+      <section class="view home-view active" id="home" aria-label="Lui home">
+        <img class="home-art" src="../public/luiappland.svg" alt="Lui: your chaotic desktop pet" />
+        <div class="home-actions" aria-label="Open a Lui feature">
+          <button data-view="graph" class="home-action graph-action">Lui Graph</button>
+          <button data-view="chat" class="home-action chat-action">Lui GPT</button>
+          <button data-view="schedule" class="home-action assign-action">Assign Task</button>
+          <button data-view="tasks" data-list="scheduled" class="home-action schedules-action">Schedules</button>
+          <button data-view="tasks" data-list="void" class="home-action void-action">Void</button>
+        </div>
+      </section>
+
+      <section class="view pixel-screen graph-view" id="graph" aria-label="Lui graph">
+        <img class="screen-art" src="../public/luigraph.svg" alt="Lui mood graph: annoyed, happy, sad and scared" />
+        <button class="screen-back" data-view="home" aria-label="Return to Lui home">←</button>
+        <button class="mood-target annoyed-target" data-mood="annoyed" aria-label="Annoyed: high energy and unpleasant">Annoyed</button>
+        <button class="mood-target happy-target" data-mood="happy" aria-label="Happy: high energy and pleasant">Happy</button>
+        <button class="mood-target sad-target" data-mood="sad" aria-label="Sad: low energy and unpleasant">Sad</button>
+        <button class="mood-target scared-target" data-mood="scared" aria-label="Scared: low energy and pleasant">Scared</button>
+        <p id="mood-status" class="screen-reader-status" aria-live="polite"></p>
+      </section>
+
+      <section class="view pixel-screen chat-view" id="chat" aria-label="Chat with Lui">
+        <img class="screen-art" src="../public/luigpt.svg" alt="Lui GPT" />
+        <button class="screen-back" data-view="home" aria-label="Return to Lui home">←</button>
+        <div class="chat-panel">
+          <div class="messages" id="messages" aria-live="polite"></div>
+          <form class="chat-compose" id="chat-form">
+            <input id="chat-input" autocomplete="off" maxlength="500" placeholder="Tell Lui what you are avoiding..." aria-label="Message Lui" required />
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="view schedule-view" id="schedule" aria-label="Assign a task">
+        <div class="pixel-screen schedule-screen">
+          <img class="screen-art" src="../public/uitaskassigner.svg" alt="Assign a task" />
+          <button class="screen-back" data-view="home" aria-label="Return to Lui home">←</button>
+          <form class="schedule-form" id="task-form">
+            <input name="name" maxlength="160" placeholder="Name" aria-label="Task name" required />
+            <input name="date" type="date" aria-label="Task date" required />
+            <input name="time" type="time" aria-label="Task time" required />
+            <button type="submit" aria-label="Save task">Save</button>
+          </form>
+        </div>
+        <section class="calendar-panel" aria-labelledby="calendar-title">
+          <div class="calendar-heading"><button id="calendar-previous" aria-label="Previous month">←</button><h2 id="calendar-title"></h2><button id="calendar-next" aria-label="Next month">→</button></div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+        </section>
+      </section>
+
+      <section class="view pixel-screen list-view" id="tasks" aria-label="Schedules and void">
+        <img class="screen-art" src="../public/luilist.svg" alt="Lui task list" />
+        <button class="screen-back" data-view="home" aria-label="Return to Lui home">←</button>
+        <div class="list-switch" aria-label="Choose a list"><button data-list-tab="scheduled">Schedules</button><button data-list-tab="void">Void</button></div>
+        <div class="task-list" id="task-list"></div>
+      </section>
+    </main>
+    <script src="renderer.js"></script>
   </body>
 </html>

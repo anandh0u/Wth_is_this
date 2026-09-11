@@ -7,7 +7,7 @@
   "main": "desktop/main.js",
   "scripts": {
     "start": "electron .",
-    "check": "node --check site.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/renderer.js && node --check desktop/pet.js && node --check desktop/audio.js && node --check desktop/ai/lui-engine.js && node --check desktop/panels/panels.js && node --check extension/background.js && node --check extension/content.js && node --check extension/popup.js",
+    "check": "node --check site.js && node --check app.js && node --check desktop/main.js && node --check desktop/preload.js && node --check desktop/renderer.js && node --check desktop/pet.js && node --check desktop/audio.js && node --check desktop/ai/lui-engine.js && node --check desktop/panels/panels.js && node --check extension/background.js && node --check extension/content.js && node --check extension/popup.js",
     "test": "node --test",
     "dist:win": "electron-builder --win portable --x64"
   },
@@ -29,6 +29,8 @@
       "desktop/**/*",
       "assets/**/*",
       "extension/**/*",
+      "public/**/*",
+      "styles.css",
       "package.json"
     ],
     "win": {
