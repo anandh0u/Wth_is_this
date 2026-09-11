@@ -12,46 +12,41 @@
     <script src="site.js" defer></script>
   </head>
   <body>
-    <main class="hero">
-      <p class="team">Anandhu <span aria-hidden="true">×</span> Abhijith</p>
+    <main class="artboard" id="artboard">
+      <img
+        class="original-design"
+        src="assets/website/lui-landing-base.svg"
+        alt="Lui, your most trustable AI assistant, designed by Anandhu and Abhijith"
+        width="1920"
+        height="1080"
+        draggable="false"
+      />
 
-      <section class="intro" aria-labelledby="lui-title">
-        <h1 id="lui-title" aria-label="Lui">
-          <span>L</span><span>U</span><span>I</span>
-        </h1>
-        <p class="tagline">Your Most Trustable<br />AI Assistant.</p>
-      </section>
+      <a
+        class="lui-hit-area"
+        id="luiDownload"
+        href="https://github.com/anandh0u/Wth_is_this/releases/download/v0.1.2/WTH-Is-This-0.1.2-demo.zip"
+        download="WTH-Is-This-0.1.2-demo.zip"
+        aria-label="Click Lui to download the WTH Is This demo"
+      ></a>
 
-      <section class="lui-stage" aria-label="Download the WTH Is This demo">
-        <a
-          class="lui-download"
-          id="luiDownload"
-          href="https://github.com/anandh0u/Wth_is_this/releases/download/v0.1.2/WTH-Is-This-0.1.2-demo.zip"
-          download="WTH-Is-This-0.1.2-demo.zip"
-          aria-label="Click Lui to download the WTH Is This demo"
-        >
-          <span class="speech" aria-hidden="true">Fine. Click me.</span>
-          <img
-            src="assets/website/lui.webp"
-            alt="Lui, a smiling pixel-art cat"
-            width="760"
-            height="1196"
-          />
-        </a>
-        <div class="platform" aria-hidden="true"><span></span></div>
-      </section>
+      <a
+        class="runaway-cta"
+        id="runawayCta"
+        href="https://github.com/anandh0u/Wth_is_this/releases/download/v0.1.2/WTH-Is-This-0.1.2-demo.zip"
+        download="WTH-Is-This-0.1.2-demo.zip"
+        aria-label="Get Your Lui"
+      >
+        <img
+          src="assets/website/get-your-lui.svg"
+          alt="Get Your Lui."
+          width="548"
+          height="63"
+          draggable="false"
+        />
+      </a>
 
-      <div class="cta-zone" aria-label="An intentionally evasive download link">
-        <a
-          class="runaway-cta"
-          id="runawayCta"
-          href="https://github.com/anandh0u/Wth_is_this/releases/download/v0.1.2/WTH-Is-This-0.1.2-demo.zip"
-          download="WTH-Is-This-0.1.2-demo.zip"
-        >Get Your Lui.</a>
-      </div>
-
-      <p class="hint" id="downloadHint" aria-live="polite">Psst. Click the cat.</p>
-      <p class="signature" aria-hidden="true">questionable.</p>
+      <p class="screen-reader-status" id="interactionStatus" aria-live="polite"></p>
     </main>
   </body>
 </html>
