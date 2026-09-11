@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, Menu, Notification } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { WebSocketServer } = require("ws");
+const { decide: decideAsLui, getStatus: getAiStatus } = require("./ai/lui-engine");
+const { randomAudioUrl } = require("./audio");
 
 const PORT = 17381;
 let mainWindow;
@@ -9,10 +11,15 @@ let extensionSocket;
 let stateFile;
 let tickTimer;
 let reminderTimer;
+let aiStatusTimer;
+let luiDecisionInFlight = false;
+let lastLuiDecisionAt = 0;
 const panelWindows = new Map();
+const assetRoot = path.join(__dirname, "..", "assets");
 
 let state = {
   mood: "neutral",
+  petLine: "I am observing your questionable decisions.",
   boredom: 0,
   connection: "waiting",
   currentTab: null,
@@ -23,7 +30,9 @@ let state = {
     petEnabled: true,
     chaosEnabled: false,
     sleepPranksEnabled: false,
+    localAiEnabled: true,
   },
+  ai: { available: false, running: false, model: "qwen3:1.7b" },
   eventLog: ["The creature has awakened."],
 };
 
@@ -77,6 +86,71 @@ function sendToExtension(type, payload = {}) {
 
 function syncExtensionConfig() {
   sendToExtension("config", state.settings);
+}
+
+function playRandomMemeAudio() {
+  const url = randomAudioUrl(assetRoot);
+  if (!url) {
+    log("Lui searched for meme audio but the folder was empty.");
+    broadcastState();
+    return false;
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("meme-audio", url);
+  log("Lui played a medically unnecessary sound.");
+  broadcastState();
+  return true;
+}
+
+function performDecisionAction(decision, context) {
+  if (!state.settings.petEnabled || !state.settings.chaosEnabled) return;
+  if (decision.action === "open_meme") {
+    sendToExtension("open_meme");
+    playRandomMemeAudio();
+  } else if (decision.action === "close_active") {
+    sendToExtension("close_active");
+  } else if (decision.action === "void_todo") {
+    const todo = state.todos.find((item) => item.id === context.todoId && item.status === "alive") ||
+      state.todos.find((item) => item.status === "alive");
+    if (todo) {
+      todo.status = "void";
+      log(`Lui sent “${todo.text}” to the void.`);
+      saveState();
+    }
+  }
+}
+
+async function runLuiDecision(context, allowAction = true) {
+  if (luiDecisionInFlight || !state.settings.petEnabled) return null;
+  luiDecisionInFlight = true;
+  try {
+    const decision = await decideAsLui({
+      ...context,
+      boredom: state.boredom,
+      tab: state.currentTab,
+      activeTodos: state.todos.filter((item) => item.status === "alive").slice(0, 5),
+      upcomingEvents: state.events.filter((item) => item.status === "scheduled").slice(0, 5),
+    }, { localAiEnabled: state.settings.localAiEnabled });
+    state.petLine = decision.line;
+    log(`${decision.source}: ${decision.verdict} → ${decision.action}`);
+    if (allowAction) performDecisionAction(decision, context);
+    lastLuiDecisionAt = Date.now();
+    broadcastState();
+    return decision;
+  } finally {
+    luiDecisionInFlight = false;
+  }
+}
+
+async function refreshAiStatus() {
+  state.ai = await getAiStatus();
+  broadcastState();
+}
+
+function maybeAutomaticDecision() {
+  const cooldownPassed = Date.now() - lastLuiDecisionAt >= 2 * 60 * 1000;
+  if (state.boredom >= 75 && cooldownPassed) {
+    void runLuiDecision({ kind: "boredom", text: "The user has stayed boring for too long." });
+  }
 }
 
 function startBridge() {
@@ -172,6 +246,10 @@ function buildMenu() {
         { label: "Pet enabled", type: "checkbox", checked: state.settings.petEnabled, click: (item) => updateSetting("petEnabled", item.checked) },
         { label: "Allow browser chaos", type: "checkbox", checked: state.settings.chaosEnabled, click: (item) => updateSetting("chaosEnabled", item.checked) },
         { label: "Allow sleep pranks", type: "checkbox", checked: state.settings.sleepPranksEnabled, click: (item) => updateSetting("sleepPranksEnabled", item.checked) },
+        { label: "Use local AI when available", type: "checkbox", checked: state.settings.localAiEnabled, click: (item) => updateSetting("localAiEnabled", item.checked) },
+        { type: "separator" },
+        { label: "Judge me now", accelerator: "CmdOrCtrl+J", click: () => void runLuiDecision({ kind: "manual", text: "The user explicitly requested judgment." }) },
+        { label: "Play local meme audio", click: playRandomMemeAudio },
         { type: "separator" },
         { label: "Stop being sentient", click: () => {
           updateSetting("chaosEnabled", false);
@@ -222,24 +300,30 @@ app.whenReady().then(() => {
   tickTimer = setInterval(() => {
     state.boredom = Math.min(100, state.boredom + 2);
     broadcastState();
+    maybeAutomaticDecision();
   }, 5000);
   reminderTimer = setInterval(checkReminders, 5000);
+  void refreshAiStatus();
+  aiStatusTimer = setInterval(refreshAiStatus, 30000);
 });
 
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => {
   clearInterval(tickTimer);
   clearInterval(reminderTimer);
+  clearInterval(aiStatusTimer);
 });
 
 ipcMain.handle("get-state", () => state);
 ipcMain.handle("add-todo", (_event, text) => {
   const clean = String(text || "").trim().slice(0, 160);
   if (!clean) return state;
-  state.todos.push({ id: Date.now().toString(), text: clean, status: "alive" });
+  const todo = { id: Date.now().toString(), text: clean, status: "alive" };
+  state.todos.push(todo);
   log(`Accepted a suspicious task: ${clean}`);
   saveState();
   broadcastState();
+  void runLuiDecision({ kind: "todo", text: clean, todoId: todo.id });
   return state;
 });
 ipcMain.handle("list-data", (_event, type) => {
@@ -313,3 +397,16 @@ ipcMain.handle("browser-action", (_event, action) => {
   if (allowed.has(action)) sendToExtension(action);
   return state;
 });
+ipcMain.handle("ask-lui", (_event, input) => {
+  const context = {
+    kind: String(input?.kind || "manual").slice(0, 30),
+    text: String(input?.text || "Judge the current activity.").slice(0, 500),
+    todoId: input?.todoId ? String(input.todoId).slice(0, 40) : undefined,
+  };
+  return runLuiDecision(context);
+});
+ipcMain.handle("ai-status", async () => {
+  await refreshAiStatus();
+  return state.ai;
+});
+ipcMain.handle("play-meme-audio", () => playRandomMemeAudio());

@@ -23,7 +23,7 @@ function render(state) {
   elements.boredom.textContent = state.boredom;
   elements.boredomBar.style.width = `${state.boredom}%`;
   elements.pet.className = `pet ${state.mood}`;
-  elements.petLine.textContent = lines[state.mood];
+  elements.petLine.textContent = state.petLine || lines[state.mood];
   elements.currentTab.textContent = state.currentTab?.title || "nothing yet";
 
   elements.todos.replaceChildren(...state.todos.map((todo) => {
@@ -55,4 +55,9 @@ document.querySelectorAll("[data-action]").forEach((button) => {
 });
 
 window.wth.onState(render);
+window.wth.onMemeAudio((url) => {
+  const audio = new Audio(url);
+  audio.volume = 0.9;
+  audio.play().catch(() => {});
+});
 window.wth.getState().then(render);

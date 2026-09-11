@@ -54,3 +54,21 @@ The extension talks only to `ws://127.0.0.1:17381`.
 - Copy short audio files into `assets/memes/` after they are selected.
 - Mani can replace the temporary generated icon and provide Lui's mood-state
   assets without changing the behavior APIs exposed from `desktop/preload.js`.
+
+## Local AI (no training required)
+
+Lui uses deterministic rules until Ollama and the configured model are available.
+When available, the app asks the local model for a restricted JSON verdict; the
+application—not the model—enforces the allowed action list and safety gates.
+
+```powershell
+ollama pull qwen3:1.7b
+npm start
+```
+
+Optional environment overrides:
+
+```powershell
+$env:WTH_OLLAMA_MODEL = 'qwen3:1.7b'
+$env:WTH_OLLAMA_URL = 'http://127.0.0.1:11434'
+```

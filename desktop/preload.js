@@ -12,5 +12,9 @@ contextBridge.exposeInMainWorld("wth", {
   openPanel: (name) => ipcRenderer.invoke("open-panel", name),
   updateSetting: (key, value) => ipcRenderer.invoke("update-setting", key, value),
   browserAction: (action) => ipcRenderer.invoke("browser-action", action),
+  askLui: (context) => ipcRenderer.invoke("ask-lui", context),
+  getAiStatus: () => ipcRenderer.invoke("ai-status"),
+  playMemeAudio: () => ipcRenderer.invoke("play-meme-audio"),
   onState: (callback) => ipcRenderer.on("state", (_event, state) => callback(state)),
+  onMemeAudio: (callback) => ipcRenderer.on("meme-audio", (_event, url) => callback(url)),
 });
