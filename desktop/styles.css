@@ -1,0 +1,24 @@
+:root { font-family: system-ui, sans-serif; color: #f4f1ea; background: #17161b; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { padding: 18px; }
+header { position: relative; }
+h1 { margin: 0; }
+h2 { font-size: 1rem; margin-bottom: 8px; }
+section { margin: 18px 0; padding: 14px; border: 1px solid #3a3742; border-radius: 12px; }
+.connection { float: right; color: #f0b35d; }
+.connection.connected { color: #63dc8c; }
+.pet-stage { text-align: center; }
+.pet { width: 110px; height: 110px; margin: auto; display: grid; place-items: center; border-radius: 40%; background: #7027c9; font-size: 64px; transition: transform .2s, background .2s; }
+.pet.annoyed { background: #bb5a19; transform: rotate(-4deg); }
+.pet.chaotic { background: #d52c4b; transform: rotate(5deg) scale(1.08); }
+.meter { height: 8px; margin-top: 12px; overflow: hidden; border-radius: 10px; background: #34313b; }
+.meter span { display: block; width: 0; height: 100%; background: #dd4464; transition: width .3s; }
+form { display: flex; gap: 8px; }
+input { flex: 1; min-width: 0; padding: 9px; }
+button { padding: 8px 10px; cursor: pointer; }
+ul, ol { padding-left: 22px; }
+li { margin: 6px 0; }
+li.void { opacity: .45; text-decoration: line-through; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab { overflow-wrap: anywhere; color: #bbb4c7; }

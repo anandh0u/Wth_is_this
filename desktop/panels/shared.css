@@ -1,0 +1,13 @@
+:root { font-family: system-ui, sans-serif; color: #f5f1e8; background: #17161b; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px; }
+h1 { margin-top: 0; }
+form { display: grid; gap: 10px; padding: 16px; border: 1px solid #3b3743; border-radius: 12px; }
+input, textarea, select, button { font: inherit; padding: 10px; }
+textarea { min-height: 110px; resize: vertical; }
+button { cursor: pointer; }
+.items { display: grid; gap: 10px; margin-top: 18px; }
+.item { padding: 14px; border: 1px solid #3b3743; border-radius: 10px; background: #211f27; }
+.item.void { opacity: .45; text-decoration: line-through; }
+.meta { color: #bcb5c5; font-size: .85rem; }
+.empty { color: #bcb5c5; }

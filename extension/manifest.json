@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Lui · WTH Is This?",
+  "version": "0.1.0",
+  "description": "Lets the WTH desktop pet perform controlled browser pranks.",
+  "permissions": ["tabs", "storage", "scripting", "idle"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Lui · WTH Is This?",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}

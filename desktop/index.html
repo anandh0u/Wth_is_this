@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WTH Is This?</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <span id="connection" class="connection">waiting</span>
+        <h1>WTH Is This?</h1>
+        <p id="pet-line">I am observing your questionable decisions.</p>
+      </header>
+
+      <section class="pet-stage" aria-label="Pet placeholder">
+        <div id="pet" class="pet">?</div>
+        <div class="meter"><span id="boredom-bar"></span></div>
+        <p>Boredom: <strong id="boredom">0</strong>% · <strong id="mood">neutral</strong></p>
+      </section>
+
+      <section>
+        <h2>Tasks I may permit</h2>
+        <form id="todo-form">
+          <input id="todo-input" maxlength="160" placeholder="Add something regrettable" required />
+          <button type="submit">Add</button>
+        </form>
+        <ul id="todos"></ul>
+      </section>
+
+      <section>
+        <h2>Controlled chaos</h2>
+        <div class="actions">
+          <button data-action="open_meme">Open meme</button>
+          <button data-action="close_active">Close active tab</button>
+          <button data-action="undo_close">Undo tab prank</button>
+        </div>
+        <p class="tab">Watching: <span id="current-tab">nothing yet</span></p>
+      </section>
+
+      <section>
+        <h2>Creature log</h2>
+        <ol id="event-log"></ol>
+      </section>
+    </main>
+    <script src="renderer.js"></script>
+  </body>
+</html>
