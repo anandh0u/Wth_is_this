@@ -8,6 +8,13 @@
       content="Meet Lui, the anti-productivity desktop pet nobody asked for."
     />
     <title>WTH Is This? — Get Your Lui</title>
+    <link
+      rel="preload"
+      href="assets/website/lui-landing-base.png"
+      as="image"
+      type="image/png"
+      fetchpriority="high"
+    />
     <link rel="stylesheet" href="site.css" />
     <script src="site.js" defer></script>
   </head>
@@ -15,10 +22,12 @@
     <main class="artboard" id="artboard">
       <img
         class="original-design"
-        src="assets/website/lui-landing-base.svg"
+        src="assets/website/lui-landing-base.png"
         alt="Lui, your most trustable AI assistant, designed by Anandhu and Abhijith"
         width="1920"
         height="1080"
+        decoding="sync"
+        fetchpriority="high"
         draggable="false"
       />
 

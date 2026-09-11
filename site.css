@@ -9,6 +9,7 @@
 
 html,
 body {
+  position: relative;
   width: 100%;
   min-height: 100%;
   margin: 0;
@@ -22,12 +23,22 @@ body {
   background: #79636b;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  inset: -2rem;
+  background: url("assets/website/lui-landing-base.png") center / cover no-repeat;
+  filter: blur(1.5rem);
+  opacity: 0.88;
+}
+
 .artboard {
   position: relative;
   width: min(100vw, 177.7778svh);
   aspect-ratio: 16 / 9;
   overflow: hidden;
   user-select: none;
+  box-shadow: 0 0 2rem rgba(49, 17, 32, 0.18);
 }
 
 .original-design {
