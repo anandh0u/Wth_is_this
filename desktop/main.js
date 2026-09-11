@@ -8,6 +8,8 @@ const { randomAudioUrl } = require("./audio");
 
 const PORT = 17381;
 const PET_GROUND_MARGIN = 10;
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+let appIsQuitting = false;
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 let mainWindow;
 let petWindow;
@@ -190,7 +192,13 @@ function startBridge() {
     response.end();
   });
   const server = new WebSocketServer({ server: httpServer });
-  httpServer.listen(PORT, "127.0.0.1");
+  const listening = new Promise((resolve, reject) => {
+    httpServer.once("error", reject);
+    httpServer.listen(PORT, "127.0.0.1", () => {
+      httpServer.removeListener("error", reject);
+      resolve();
+    });
+  });
   server.on("connection", (socket) => {
     extensionSocket = socket;
     state.connection = "connected";
@@ -223,6 +231,7 @@ function startBridge() {
       broadcastState();
     });
   });
+  return listening;
 }
 
 function createWindow() {
@@ -240,6 +249,10 @@ function createWindow() {
     },
   });
   mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+    if (!appIsQuitting) app.quit();
+  });
 }
 
 function createPetWindow() {
@@ -396,9 +409,27 @@ function checkReminders() {
   }
 }
 
-app.whenReady().then(() => {
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
+
+app.whenReady().then(async () => {
+  if (!hasSingleInstanceLock) return;
   loadState();
-  startBridge();
+  try {
+    await startBridge();
+  } catch (error) {
+    console.error(`Lui could not start the desktop bridge: ${error.message}`);
+    app.quit();
+    return;
+  }
   createWindow();
   createPetWindow();
   buildMenu();
@@ -420,6 +451,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => {
+  appIsQuitting = true;
   clearInterval(tickTimer);
   clearInterval(reminderTimer);
   clearInterval(aiStatusTimer);
