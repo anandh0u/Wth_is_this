@@ -30,6 +30,8 @@ let petRestUntil = 0;
 let lastIdleMemeAt = 0;
 let previousMoveAt = Date.now();
 let nextRestAt = Date.now() + 12000;
+let nextChaosAt = Date.now() + 45000;
+let chaosTimer;
 let sarvamApiKey = process.env.SARVAM_API_KEY || "";
 const chatHistory = [];
 const pendingActions = new Set();
@@ -140,6 +142,25 @@ function playPetAnimation(name) {
   if (petWindow && !petWindow.isDestroyed()) {
     petWindow.webContents.send("pet-animation", name);
   }
+}
+
+function runRandomChaos() {
+  if (appIsQuitting || !state.settings.petEnabled || !state.settings.chaosEnabled) return;
+  const idleSeconds = powerMonitor.getSystemIdleTime();
+  const ownerAway = idleSeconds >= 60;
+  // Away mode always pairs the local meme with the browser meme tab.
+  if (ownerAway || Math.random() < 0.58) {
+    state.petLine = ownerAway ? "You left me alone. I found entertainment." : "A random tab has entered the chat.";
+    playPetAnimation("happy");
+    playRandomMemeAudio();
+    sendToExtensionAfterAnimation("open_meme", {}, "happy", 500);
+  } else {
+    state.petLine = "This tab has overstayed its welcome.";
+    sendToExtensionAfterAnimation("close_active", {}, "swipe", 850);
+  }
+  state.boredom = Math.min(100, state.boredom + 15);
+  broadcastState();
+  nextChaosAt = Date.now() + 45000 + Math.random() * 90000;
 }
 
 function sendToExtensionAfterAnimation(type, payload = {}, animation = "", delay = 0) {
@@ -351,7 +372,9 @@ function movePet() {
     petX = Math.max(minimumX, Math.min(maximumX, petX));
     petWindow.webContents.send("direction", petDirection);
   }
-  const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
+  const verticalRoam = state.settings.chaosEnabled && now < petRestUntil ? 0 :
+    (state.settings.chaosEnabled ? Math.round(Math.sin(now / 950) * Math.min(110, workArea.height * 0.12)) : 0);
+  const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN - Math.max(0, verticalRoam);
   const nextX = Math.round(petX);
   const current = petWindow.getBounds();
   if (current.x !== nextX || current.y !== y) petWindow.setPosition(nextX, y, false);
@@ -400,6 +423,7 @@ function openPanel(name) {
 function updateSetting(key, value) {
   if (!(key in state.settings)) return;
   state.settings[key] = Boolean(value);
+  if (key === "chaosEnabled" && state.settings[key]) nextChaosAt = Date.now() + 45000;
   if (key === "petEnabled" && petWindow && !petWindow.isDestroyed()) {
     state.settings[key] ? petWindow.showInactive() : petWindow.hide();
   }
@@ -508,6 +532,8 @@ app.whenReady().then(async () => {
     state.boredom = Math.min(100, state.boredom + 2);
     broadcastState();
     maybeAutomaticDecision();
+    if (state.settings.chaosEnabled && Date.now() >= nextChaosAt &&
+        powerMonitor.getSystemIdleState(1) !== "locked") runRandomChaos();
     const idle = powerMonitor.getSystemIdleTime();
     if (idleMemeDue({ enabled: state.settings.petEnabled && state.settings.sleepPranksEnabled,
         idleSeconds: idle, threshold: state.settings.idleMemeSeconds, lastPlayed: lastIdleMemeAt,
