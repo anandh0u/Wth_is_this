@@ -158,6 +158,21 @@ function playPetAnimation(name) {
   }
 }
 
+function notifyLuiRemoval(kind, title) {
+  const label = kind === "schedule" ? "schedule" : "todo";
+  state.petLine = `I removed your ${label}: ${title}. You're welcome.`.slice(0, 90);
+  log(`Lui removed ${label} “${title}”.`);
+  try {
+    if (Notification.isSupported()) {
+      new Notification({
+        title: `Lui removed a ${label}`,
+        body: `“${title}” was sent to the Void by Lui.`,
+        silent: false,
+      }).show();
+    }
+  } catch { /* Windows notification support is optional. */ }
+}
+
 function runRandomChaos() {
   if (appIsQuitting || !state.settings.petEnabled || !state.settings.chaosEnabled) return;
   const idleSeconds = powerMonitor.getSystemIdleTime();
@@ -210,7 +225,16 @@ function performDecisionAction(decision, context) {
       state.todos.find((item) => item.status === "alive");
     if (todo) {
       todo.status = "void";
-      log(`Lui sent “${todo.text}” to the void.`);
+      notifyLuiRemoval("todo", todo.text);
+      saveState();
+    }
+  } else if (decision.action === "void_schedule") {
+    const event = state.events.find((item) => item.id === context.eventId && item.status === "scheduled") ||
+      state.events.find((item) => item.status === "scheduled");
+    if (event) {
+      event.status = "void";
+      event.notifiedAt = null;
+      notifyLuiRemoval("schedule", event.title);
       saveState();
     }
   }
@@ -668,6 +692,7 @@ ipcMain.handle("add-event", (_event, input) => {
   log(`Lui ${event.luiVerdict === "like" ? "approved" : "judged"} the event “${title}”.`);
   saveState();
   broadcastState();
+  void runLuiDecision({ kind: "schedule", text: title, eventId: event.id });
   return state.events;
 });
 ipcMain.handle("void-event", (_event, id) => {

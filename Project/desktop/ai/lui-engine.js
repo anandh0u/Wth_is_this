@@ -2,7 +2,7 @@ const DEFAULT_ENDPOINT = "http://127.0.0.1:11434";
 const DEFAULT_MODEL = "gemma3:270m";
 const SARVAM_ENDPOINT = "https://api.sarvam.ai/v1/chat/completions";
 const SARVAM_MODEL = "sarvam-105b-conversations";
-const ACTIONS = new Set(["none", "open_meme", "close_active", "void_todo", "pet_visit"]);
+const ACTIONS = new Set(["none", "open_meme", "close_active", "void_todo", "void_schedule", "pet_visit"]);
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
@@ -39,7 +39,7 @@ function sanitizeDecision(input, source = "local") {
 function restrictDecision(decision, kind) {
   const allowedByKind = {
     todo: new Set(["none", "void_todo"]),
-    schedule: new Set(["none"]),
+    schedule: new Set(["none", "void_schedule"]),
     chat: new Set(["none"]),
     boredom: new Set(["none", "open_meme", "close_active", "pet_visit"]),
     activity: new Set(["none", "open_meme", "close_active", "pet_visit"]),
@@ -52,7 +52,7 @@ function restrictDecision(decision, kind) {
 function aiMessages(context) {
   const history = Array.isArray(context.history) ? context.history.slice(-8) : [];
   return [
-    { role: "system", content: `${SYSTEM_PROMPT}\nReply as strict JSON with verdict, line, and action. For chat and schedule, action must be none.` },
+    { role: "system", content: `${SYSTEM_PROMPT}\nReply as strict JSON with verdict, line, and action. Chat actions must be none. Schedule actions may only be none or void_schedule.` },
     ...history
       .filter((item) => item && ["user", "assistant"].includes(item.role) && typeof item.content === "string")
       .map((item) => ({ role: item.role, content: item.content.slice(0, 500) })),
@@ -84,7 +84,9 @@ function fallbackDecision(context) {
 
   const choices = context.kind === "todo"
     ? ["none", "void_todo", "none"]
-    : ["open_meme", "pet_visit", "close_active", "none"];
+    : context.kind === "schedule"
+      ? ["none", "void_schedule", "none"]
+      : ["open_meme", "pet_visit", "close_active", "none"];
   const action = choices[simpleHash(text) % choices.length];
   const lines = [
     "I watched you work. I would like those minutes back.",
