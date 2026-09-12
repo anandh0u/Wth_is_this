@@ -46,15 +46,16 @@ For Hardware:
 For Software:
 
 ```powershell
+cd Project
 npm ci
 npm start
 ```
 
-Load the `extension` folder from `chrome://extensions` with Developer mode enabled.
+Load the `Project/extension` folder from `chrome://extensions` with Developer mode enabled.
 
 ### Project Documentation
 
-See [docs.html](docs.html) for the complete project guide.
+See [the project guide](Project/docs.html) for the complete project guide.
 
 #### Screenshots
 
