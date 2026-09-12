@@ -459,9 +459,9 @@ function movePet() {
   // lifts the cat inside this taller window, so it can climb without disappearing.
   const bottomY = workArea.y + workArea.height - PET_WINDOW_HEIGHT;
   const current = petWindow.getBounds();
-  // Never move the native window upward. Vertical action stays inside its
-  // transparent bounds, avoiding top-screen disappearance and compositor lag.
-  const y = bottomY;
+  // One bounded jump to the tab strip, then straight back to the desktop.
+  // This avoids the frame-by-frame native movement that caused stutter.
+  const y = closingTab ? workArea.y : bottomY;
   const jumpProgress = petJumpUntil > now
     ? Math.max(0, Math.min(1, (now - petJumpStartedAt) / (petJumpUntil - petJumpStartedAt)))
     : 0;

@@ -77,19 +77,8 @@ function protectedUrl(rawUrl) {
   }
 }
 
-async function closeActive() {
-  const active = await activeTab();
-  const tabs = await chrome.tabs.query({ lastFocusedWindow: true });
-  const candidates = tabs.filter((tab) => tab.id && !tab.pinned && !protectedUrl(tab.url));
-  // Prefer a different ordinary tab so the prank is actually random. If only
-  // one safe tab exists, Lui is allowed to choose that one.
-  const otherTabs = candidates.filter((tab) => tab.id !== active?.id);
-  const choices = otherTabs.length ? otherTabs : candidates;
-  const tab = choices[Math.floor(Math.random() * choices.length)];
-  if (!tab) {
-    return send("result", { success: false, message: "Every open tab is protected, pinned, or internal." });
-  }
-
+async function isSafeToClose(tab) {
+  if (!tab?.id || tab.pinned || protectedUrl(tab.url)) return false;
   let pageState = { editedForm: true };
   try {
     pageState = await chrome.tabs.sendMessage(tab.id, { type: "page_state" });
@@ -106,17 +95,27 @@ async function closeActive() {
         }),
       });
       pageState = injected?.result || { editedForm: true };
-    } catch {
-      return send("result", { success: false, message: "I could not prove that this tab was safe to close." });
-    }
+    } catch { return false; }
   }
-  if (pageState.editedForm) {
-    return send("result", { success: false, message: "That tab has edited form fields, so I spared it." });
-  }
+  if (pageState.editedForm) return false;
 
-  const [inspection] = await chrome.scripting.executeScript({ target: { tabId: tab.id },
-    func: () => Boolean(document.querySelector('[contenteditable="true"], input[type="password"]')) });
-  if (!inspection || inspection.result) return send("result", { success: false, message: "This page contains an editor or embedded content; Lui will not close it." });
+  try {
+    const [inspection] = await chrome.scripting.executeScript({ target: { tabId: tab.id },
+      func: () => Boolean(document.querySelector('[contenteditable="true"], input[type="password"]')) });
+    return Boolean(inspection && !inspection.result);
+  } catch { return false; }
+}
+
+async function closeActive() {
+  const active = await activeTab();
+  const tabs = await chrome.tabs.query({ lastFocusedWindow: true });
+  const candidates = tabs.filter((tab) => tab.id !== active?.id && !tab.pinned && !protectedUrl(tab.url));
+  const safeTabs = [];
+  for (const tab of candidates) {
+    if (await isSafeToClose(tab)) safeTabs.push(tab);
+  }
+  const tab = safeTabs[Math.floor(Math.random() * safeTabs.length)];
+  if (!tab) return send("result", { success: false, message: "No ordinary untouched tab is safe to close right now." });
   lastClosedUrl = tab.url;
   await chrome.tabs.remove(tab.id);
   send("result", { success: true, message: `Randomly closed “${tab.title || "a boring tab"}”. Undo is available.` });
