@@ -34,6 +34,8 @@ let lastIdleMemeAt = 0;
 let previousMoveAt = Date.now();
 let lastPetLift = -1;
 let tabCloseUntil = 0;
+let petJumpStartedAt = 0;
+let petJumpUntil = 0;
 let nextRestAt = Date.now() + 12000;
 let nextChaosAt = Date.now() + 45000;
 let chaosTimer;
@@ -58,7 +60,7 @@ let state = {
   events: [],
   settings: {
     petEnabled: true,
-    chaosEnabled: false,
+    chaosEnabled: true,
     sleepPranksEnabled: true,
     localAiEnabled: true,
     petWalkingEnabled: true,
@@ -86,6 +88,10 @@ function loadState() {
     if (state.settings.idleMemePolicyVersion !== 1) {
       state.settings.sleepPranksEnabled = true;
       state.settings.idleMemePolicyVersion = 1;
+    }
+    if (state.settings.browserChaosPolicyVersion !== 1) {
+      state.settings.chaosEnabled = true;
+      state.settings.browserChaosPolicyVersion = 1;
     }
   } catch {
     // First run or invalid state: start clean.
@@ -158,6 +164,11 @@ function playPetAnimation(name) {
   }
 }
 
+function makeLuiJump(duration = 900) {
+  petJumpStartedAt = Date.now();
+  petJumpUntil = petJumpStartedAt + duration;
+}
+
 function notifyLuiRemoval(kind, title) {
   const label = kind === "schedule" ? "schedule" : "todo";
   state.petLine = `I removed your ${label}: ${title}. You're welcome.`.slice(0, 90);
@@ -180,6 +191,7 @@ function runRandomChaos() {
   // Away mode always pairs the local meme with the browser meme tab.
   if (ownerAway || Math.random() < 0.58) {
     state.petLine = ownerAway ? "You left me alone. I found entertainment." : "A random tab has entered the chat.";
+    makeLuiJump(1100);
     playPetAnimation("happy");
     playRandomMemeAudio();
     sendToExtensionAfterAnimation("open_meme", {}, "happy", 500);
@@ -189,13 +201,14 @@ function runRandomChaos() {
   }
   state.boredom = Math.min(100, state.boredom + 15);
   broadcastState();
-  nextChaosAt = Date.now() + 45000 + Math.random() * 90000;
+  nextChaosAt = Date.now() + 20000 + Math.random() * 25000;
 }
 
 function closeBrowserTabWithLui() {
   // Travel only between valid work-area positions: climb to the tab strip,
   // swipe, close an eligible active tab, then return to the desktop.
   tabCloseUntil = Date.now() + 1450;
+  makeLuiJump(1450);
   state.petLine = "I am climbing to that tab's little ×.";
   playPetAnimation("swipe");
   broadcastState();
@@ -214,6 +227,7 @@ function sendToExtensionAfterAnimation(type, payload = {}, animation = "", delay
 function performDecisionAction(decision, context) {
   if (!state.settings.petEnabled || !state.settings.chaosEnabled) return;
   if (decision.action === "open_meme") {
+    makeLuiJump(900);
     sendToExtensionAfterAnimation("open_meme", {}, "happy", 300);
     playRandomMemeAudio();
   } else if (decision.action === "close_active") {
@@ -432,11 +446,15 @@ function movePet() {
   const targetY = closingTab ? workArea.y : bottomY;
   const current = petWindow.getBounds();
   const y = Math.round(current.y + Math.sign(targetY - current.y) * Math.min(Math.abs(targetY - current.y), 900 * elapsed));
-  const lift = closingTab
-    ? 116
-    : state.settings.chaosEnabled
-    ? Math.round(Math.max(0, Math.sin(now / 1100)) * 82)
+  const jumpProgress = petJumpUntil > now
+    ? Math.max(0, Math.min(1, (now - petJumpStartedAt) / (petJumpUntil - petJumpStartedAt)))
     : 0;
+  const jumpLift = Math.round(Math.sin(jumpProgress * Math.PI) * 116);
+  const lift = closingTab
+    ? Math.max(84, jumpLift)
+    : jumpLift || (state.settings.chaosEnabled
+      ? Math.round(Math.max(0, Math.sin(now / 1100)) * 82)
+      : 0);
   if (lift !== lastPetLift) {
     lastPetLift = lift;
     petWindow.webContents.send("pet-lift", lift);
@@ -490,7 +508,7 @@ function openPanel(name) {
 function updateSetting(key, value) {
   if (!(key in state.settings)) return;
   state.settings[key] = Boolean(value);
-  if (key === "chaosEnabled" && state.settings[key]) nextChaosAt = Date.now() + 45000;
+  if (key === "chaosEnabled" && state.settings[key]) nextChaosAt = Date.now() + 15000;
   if (key === "petEnabled" && petWindow && !petWindow.isDestroyed()) {
     state.settings[key] ? (petWindow.showInactive(), petWindow.setAlwaysOnTop(true, "screen-saver")) : petWindow.hide();
   }
@@ -723,7 +741,10 @@ ipcMain.handle("void-todo", (_event, id) => {
 ipcMain.handle("browser-action", (_event, action) => {
   const allowed = new Set(["close_active", "undo_close", "open_meme", "pet_visit"]);
   if (action === "close_active") closeBrowserTabWithLui();
-  else if (action === "open_meme") sendToExtensionAfterAnimation(action, {}, "happy", 300);
+  else if (action === "open_meme") {
+    makeLuiJump(900);
+    sendToExtensionAfterAnimation(action, {}, "happy", 300);
+  }
   else if (action === "pet_visit") sendToExtensionAfterAnimation(action, {}, "wave", 320);
   else if (allowed.has(action)) sendToExtension(action);
   return state;
