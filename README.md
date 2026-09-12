@@ -69,7 +69,7 @@ The Electron app connects to the Chrome extension through a local WebSocket brid
 
 #### Video
 
-Demo video link will be added after recording.
+- demo videos and promo : https://drive.google.com/drive/folders/1aK6tN86eYUQduAUdDB0zQIXcScCyrZnP?usp=sharing
 
 #### Additional Demos
 
