@@ -107,6 +107,47 @@ body::before {
   transform: translateY(0.45%);
 }
 
+.lui-speech {
+  position: absolute;
+  z-index: 4;
+  top: 12.5%;
+  left: 56.4%;
+  display: none;
+  margin: 0;
+  padding: clamp(0.35rem, 0.55vw, 0.7rem) clamp(0.5rem, 0.8vw, 1rem);
+  border: max(2px, 0.16vw) solid #24131d;
+  border-radius: 0.65rem;
+  background: #fff9e9;
+  box-shadow: max(3px, 0.25vw) max(3px, 0.25vw) 0 #432530;
+  color: #432530;
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(0.55rem, 1vw, 1.15rem);
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.lui-speech::after {
+  position: absolute;
+  right: 14%;
+  bottom: -0.55rem;
+  width: 0;
+  height: 0;
+  content: "";
+  border-top: 0.65rem solid #24131d;
+  border-right: 0.45rem solid transparent;
+}
+
+.lui-speech.visible {
+  display: block;
+  animation: lui-speech-pop 180ms steps(2, end);
+}
+
+@keyframes lui-speech-pop {
+  from { transform: scale(0.72); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 .runaway-cta {
   --move-x: 0px;
   --move-y: 0px;

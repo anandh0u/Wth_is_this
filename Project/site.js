@@ -6,9 +6,10 @@
   const artboard = document.querySelector("#artboard");
   const cta = document.querySelector("#runawayCta");
   const lui = document.querySelector("#luiDownload");
+  const speech = document.querySelector("#luiSpeech");
   const status = document.querySelector("#interactionStatus");
 
-  if (!artboard || !cta || !lui || !status) return;
+  if (!artboard || !cta || !lui || !speech || !status) return;
 
   cta.href = demoUrl;
   lui.href = demoUrl;
@@ -58,7 +59,13 @@
     cta.style.setProperty("--move-x", `${previousX}px`);
     cta.style.setProperty("--move-y", `${previousY}px`);
     dodges += 1;
-    status.textContent = dodges > 2 ? "Too slow. Click Lui the cat to download." : "Lui moved the link.";
+    if (dodges >= 4) {
+      speech.classList.add("visible");
+      speech.setAttribute("aria-hidden", "false");
+      status.textContent = "Lui says: Click on me.";
+    } else {
+      status.textContent = "Lui moved the link.";
+    }
   }
 
   cta.addEventListener("pointerenter", (event) => {
