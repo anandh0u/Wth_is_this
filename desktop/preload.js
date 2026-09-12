@@ -20,5 +20,6 @@ contextBridge.exposeInMainWorld("wth", {
   onState: (callback) => ipcRenderer.on("state", (_event, state) => callback(state)),
   onMemeAudio: (callback) => ipcRenderer.on("meme-audio", (_event, url) => callback(url)),
   onDirection: (callback) => ipcRenderer.on("direction", (_event, direction) => callback(direction)),
+  onPetLift: (callback) => ipcRenderer.on("pet-lift", (_event, lift) => callback(lift)),
   onPetAnimation: (callback) => ipcRenderer.on("pet-animation", (_event, name) => callback(name)),
 });

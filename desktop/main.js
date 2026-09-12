@@ -10,6 +10,9 @@ const { reminderState, idleMemeDue } = require("./timing");
 
 const PORT = 17381;
 const PET_GROUND_MARGIN = 10;
+const PET_WIDTH = 170;
+const PET_HEIGHT = 170;
+const PET_WINDOW_HEIGHT = 300;
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let appIsQuitting = false;
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
@@ -29,6 +32,7 @@ let lastLuiDecisionAt = 0;
 let petRestUntil = 0;
 let lastIdleMemeAt = 0;
 let previousMoveAt = Date.now();
+let lastPetLift = -1;
 let nextRestAt = Date.now() + 12000;
 let nextChaosAt = Date.now() + 45000;
 let chaosTimer;
@@ -319,12 +323,12 @@ function createWindow() {
 
 function createPetWindow() {
   const workArea = screen.getPrimaryDisplay().workArea;
-  petX = workArea.x + workArea.width - 180;
-  const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
+  petX = workArea.x + workArea.width - PET_WIDTH - 10;
+  const y = workArea.y + workArea.height - PET_WINDOW_HEIGHT;
   petWindow = new BrowserWindow({
     title: "Lui Pet",
-    width: 170,
-    height: 170,
+    width: PET_WIDTH,
+    height: PET_WINDOW_HEIGHT,
     x: petX,
     y,
     transparent: true,
@@ -366,16 +370,22 @@ function movePet() {
   const workArea = screen.getPrimaryDisplay().workArea;
   petX += petDirection * 48 * elapsed;
   const minimumX = workArea.x;
-  const maximumX = workArea.x + workArea.width - 170;
+  const maximumX = workArea.x + workArea.width - PET_WIDTH;
   if (petX <= minimumX || petX >= maximumX) {
     petDirection *= -1;
     petX = Math.max(minimumX, Math.min(maximumX, petX));
     petWindow.webContents.send("direction", petDirection);
   }
-  const verticalRoam = state.settings.chaosEnabled && now < petRestUntil ? 0 :
-    (state.settings.chaosEnabled ? Math.round(Math.sin(now / 950) * Math.min(110, workArea.height * 0.12)) : 0);
-  const floorY = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
-  const y = Math.max(workArea.y + 8, Math.min(floorY, floorY - Math.max(0, verticalRoam)));
+  // Keep the native transparent window fully inside the work area. The renderer
+  // lifts the cat inside this taller window, so it can climb without disappearing.
+  const y = workArea.y + workArea.height - PET_WINDOW_HEIGHT;
+  const lift = state.settings.chaosEnabled
+    ? Math.round(Math.max(0, Math.sin(now / 1100)) * 82)
+    : 0;
+  if (lift !== lastPetLift) {
+    lastPetLift = lift;
+    petWindow.webContents.send("pet-lift", lift);
+  }
   const nextX = Math.round(petX);
   const current = petWindow.getBounds();
   if (current.x !== nextX || current.y !== y) {
@@ -550,7 +560,7 @@ app.whenReady().then(async () => {
   reminderTimer = setInterval(checkReminders, 5000);
   void refreshAiStatus();
   aiStatusTimer = setInterval(refreshAiStatus, 30000);
-  petMovementTimer = setInterval(movePet, 33);
+  petMovementTimer = setInterval(movePet, 80);
   bridgeHeartbeatTimer = setInterval(() => {
     if (extensionSocket && extensionSocket.readyState === extensionSocket.OPEN) {
       extensionSocket.send(JSON.stringify({ type: "heartbeat", payload: { at: Date.now() } }));

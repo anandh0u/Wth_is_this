@@ -1,5 +1,4 @@
 const BRIDGE = "ws://127.0.0.1:17381";
-const HEALTH = "http://127.0.0.1:17381/health";
 const MEME_URLS = [
   "https://youtu.be/XqZsoesa55w?si=6oJfXHm_esOwN4fl",
   "https://youtu.be/dxo23k5voiE?si=afoFkCiKQBzd2rUp",
@@ -19,18 +18,16 @@ function randomMemeUrl() {
   return MEME_URLS[Math.floor(Math.random() * MEME_URLS.length)];
 }
 
-async function connect() {
+function connect() {
   clearTimeout(reconnectTimer);
   if (socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState)) return;
-  try {
-    const response = await fetch(HEALTH, { cache: "no-store", targetAddressSpace: "local" });
-    if (!response.ok) throw new Error("desktop unavailable");
-  } catch {
+  // Chrome blocks extension-to-loopback fetches behind Private Network Access.
+  // A direct local WebSocket does not need that preflight.
+  try { socket = new WebSocket(BRIDGE); } catch {
     chrome.storage.local.set({ bridgeState: "waiting" });
     reconnectTimer = setTimeout(connect, 3000);
     return;
   }
-  socket = new WebSocket(BRIDGE);
   socket.onopen = () => {
     chrome.storage.local.set({ bridgeState: "connected" });
     reportActivity();
@@ -105,7 +102,7 @@ async function closeActive() {
   }
 
   const [inspection] = await chrome.scripting.executeScript({ target: { tabId: tab.id },
-    func: () => Boolean(document.querySelector('[contenteditable="true"], iframe, input[type="password"]')) });
+    func: () => Boolean(document.querySelector('[contenteditable="true"], input[type="password"]')) });
   if (!inspection || inspection.result) return send("result", { success: false, message: "This page contains an editor or embedded content; Lui will not close it." });
   const current = await activeTab();
   if (current?.id !== tab.id || current.url !== tab.url) return;
@@ -178,10 +175,9 @@ chrome.idle.setDetectionInterval(60);
 chrome.idle.onStateChanged.addListener(handleIdleState);
 chrome.runtime.onMessage.addListener((message, _sender, respond) => {
   if (message.type === "bridge_retry") {
-    connect()
-      .then(() => respond({ ok: true }))
-      .catch(() => respond({ ok: false }));
-    return true;
+    connect();
+    respond({ ok: true });
+    return;
   }
   if (message.type !== "popup_action") return;
   const allowed = new Set(["pet_visit", "close_active", "undo_close", "open_meme"]);

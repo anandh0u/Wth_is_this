@@ -57,6 +57,7 @@ setInterval(() => {
 
 lui.addEventListener("click", () => window.wth.petClick());
 window.wth.onDirection((direction) => lui.classList.toggle("left", direction < 0));
+window.wth.onPetLift((lift) => lui.style.setProperty("--lui-lift", String(Math.max(0, Math.min(96, lift)))));
 window.wth.onPetAnimation((name) => {
   const durations = { swipe: 900, wave: 900, happy: 900, sit: 4000, sleep: 8000, yawn: 1800, peek: 2500 };
   chooseMode(name, durations[name] || 450);
