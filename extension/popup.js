@@ -2,17 +2,10 @@ const status = document.querySelector("#status");
 const hint = document.querySelector("#hint");
 const connectButton = document.querySelector("#connect");
 const buttons = [...document.querySelectorAll("[data-action]")];
-const HEALTH = "http://127.0.0.1:17381/health";
-
-async function grantLoopbackAccessAndConnect() {
-  try {
-    const response = await fetch(HEALTH, { cache: "no-store", targetAddressSpace: "local" });
-    if (!response.ok) throw new Error("desktop unavailable");
-    await chrome.runtime.sendMessage({ type: "bridge_retry" });
-    return true;
-  } catch {
-    return false;
-  }
+async function connectToDesktop() {
+  // Do not fetch localhost here. Chrome's Private Network Access policy blocks
+  // a popup HTTP probe before the extension's WebSocket bridge can connect.
+  await chrome.runtime.sendMessage({ type: "bridge_retry" });
 }
 
 async function renderStatus() {
@@ -34,10 +27,9 @@ buttons.forEach((button) => {
 });
 
 connectButton.addEventListener("click", async () => {
-  hint.textContent = "Approve Chrome's local-network prompt…";
-  const reachable = await grantLoopbackAccessAndConnect();
+  hint.textContent = "Connecting Lui to the desktop app…";
+  await connectToDesktop();
   await new Promise((resolve) => setTimeout(resolve, 500));
-  if (!reachable) hint.textContent = "Chrome blocked loopback access or the desktop app is not running.";
   await renderStatus();
 });
 

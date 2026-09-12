@@ -33,6 +33,7 @@ let petRestUntil = 0;
 let lastIdleMemeAt = 0;
 let previousMoveAt = Date.now();
 let lastPetLift = -1;
+let tabCloseUntil = 0;
 let nextRestAt = Date.now() + 12000;
 let nextChaosAt = Date.now() + 45000;
 let chaosTimer;
@@ -61,7 +62,7 @@ let state = {
     sleepPranksEnabled: false,
     localAiEnabled: true,
     petWalkingEnabled: true,
-    idleMemeSeconds: 60,
+    idleMemeSeconds: 30,
   },
   ai: { available: false, running: false, model: "gemma3:270m" },
   eventLog: ["The creature has awakened."],
@@ -77,6 +78,9 @@ function loadState() {
     state.notes = Array.isArray(saved.notes) ? saved.notes : [];
     state.events = Array.isArray(saved.events) ? saved.events : [];
     state.settings = { ...state.settings, ...(saved.settings || {}) };
+    // Migrate the original one-minute default to the requested 30-second cue
+    // without overriding a deliberate custom delay.
+    if (state.settings.idleMemeSeconds === 60) state.settings.idleMemeSeconds = 30;
   } catch {
     // First run or invalid state: start clean.
   }
@@ -151,7 +155,7 @@ function playPetAnimation(name) {
 function runRandomChaos() {
   if (appIsQuitting || !state.settings.petEnabled || !state.settings.chaosEnabled) return;
   const idleSeconds = powerMonitor.getSystemIdleTime();
-  const ownerAway = idleSeconds >= 60;
+  const ownerAway = idleSeconds >= 30;
   // Away mode always pairs the local meme with the browser meme tab.
   if (ownerAway || Math.random() < 0.58) {
     state.petLine = ownerAway ? "You left me alone. I found entertainment." : "A random tab has entered the chat.";
@@ -160,11 +164,21 @@ function runRandomChaos() {
     sendToExtensionAfterAnimation("open_meme", {}, "happy", 500);
   } else {
     state.petLine = "This tab has overstayed its welcome.";
-    sendToExtensionAfterAnimation("close_active", {}, "swipe", 850);
+    closeBrowserTabWithLui();
   }
   state.boredom = Math.min(100, state.boredom + 15);
   broadcastState();
   nextChaosAt = Date.now() + 45000 + Math.random() * 90000;
+}
+
+function closeBrowserTabWithLui() {
+  // Travel only between valid work-area positions: climb to the tab strip,
+  // swipe, close an eligible active tab, then return to the desktop.
+  tabCloseUntil = Date.now() + 1450;
+  state.petLine = "I am climbing to that tab's little ×.";
+  playPetAnimation("swipe");
+  broadcastState();
+  later(() => sendToExtension("close_active"), 980);
 }
 
 function sendToExtensionAfterAnimation(type, payload = {}, animation = "", delay = 0) {
@@ -182,7 +196,7 @@ function performDecisionAction(decision, context) {
     sendToExtensionAfterAnimation("open_meme", {}, "happy", 300);
     playRandomMemeAudio();
   } else if (decision.action === "close_active") {
-    sendToExtensionAfterAnimation("close_active", {}, "swipe", 560);
+    closeBrowserTabWithLui();
   } else if (decision.action === "pet_visit") {
     sendToExtensionAfterAnimation("pet_visit", { line: decision.line }, "wave", 320);
   } else if (decision.action === "void_todo") {
@@ -360,15 +374,21 @@ function movePet() {
   const elapsed = Math.min(0.1, (now - previousMoveAt) / 1000);
   previousMoveAt = now;
   if (!petWindow || petWindow.isDestroyed() || !state.settings.petEnabled || !state.settings.petWalkingEnabled) return;
-  if (now < petRestUntil) return;
-  if (now >= nextRestAt) {
+  const closingTab = now < tabCloseUntil;
+  if (now < petRestUntil && !closingTab) return;
+  if (!closingTab && now >= nextRestAt) {
     const behaviors = ["sit", "yawn", "sleep", "peek"];
     playPetAnimation(behaviors[Math.floor(Math.random() * behaviors.length)]);
     nextRestAt = now + 18000 + Math.random() * 12000;
     return;
   }
   const workArea = screen.getPrimaryDisplay().workArea;
-  petX += petDirection * 48 * elapsed;
+  const tabTargetX = workArea.x + workArea.width - PET_WIDTH - 36;
+  if (closingTab) {
+    petX += Math.sign(tabTargetX - petX) * Math.min(Math.abs(tabTargetX - petX), 720 * elapsed);
+  } else {
+    petX += petDirection * 48 * elapsed;
+  }
   const minimumX = workArea.x;
   const maximumX = workArea.x + workArea.width - PET_WIDTH;
   if (petX <= minimumX || petX >= maximumX) {
@@ -378,8 +398,13 @@ function movePet() {
   }
   // Keep the native transparent window fully inside the work area. The renderer
   // lifts the cat inside this taller window, so it can climb without disappearing.
-  const y = workArea.y + workArea.height - PET_WINDOW_HEIGHT;
-  const lift = state.settings.chaosEnabled
+  const bottomY = workArea.y + workArea.height - PET_WINDOW_HEIGHT;
+  const targetY = closingTab ? workArea.y : bottomY;
+  const current = petWindow.getBounds();
+  const y = Math.round(current.y + Math.sign(targetY - current.y) * Math.min(Math.abs(targetY - current.y), 900 * elapsed));
+  const lift = closingTab
+    ? 116
+    : state.settings.chaosEnabled
     ? Math.round(Math.max(0, Math.sin(now / 1100)) * 82)
     : 0;
   if (lift !== lastPetLift) {
@@ -387,7 +412,6 @@ function movePet() {
     petWindow.webContents.send("pet-lift", lift);
   }
   const nextX = Math.round(petX);
-  const current = petWindow.getBounds();
   if (current.x !== nextX || current.y !== y) {
     try { petWindow.setPosition(nextX, y, false); } catch { /* Window may be closing; next tick recovers. */ }
   }
@@ -566,6 +590,12 @@ app.whenReady().then(async () => {
       extensionSocket.send(JSON.stringify({ type: "heartbeat", payload: { at: Date.now() } }));
     }
   }, 20000);
+  powerMonitor.on("suspend", () => {
+    if (!state.settings.petEnabled || !state.settings.sleepPranksEnabled) return;
+    state.petLine = "Laptop bedtime? One last meme.";
+    playPetAnimation("yawn");
+    playRandomMemeAudio();
+  });
 });
 
 app.on("window-all-closed", () => app.quit());
@@ -661,7 +691,7 @@ ipcMain.handle("void-todo", (_event, id) => {
 });
 ipcMain.handle("browser-action", (_event, action) => {
   const allowed = new Set(["close_active", "undo_close", "open_meme", "pet_visit"]);
-  if (action === "close_active") sendToExtensionAfterAnimation(action, {}, "swipe", 560);
+  if (action === "close_active") closeBrowserTabWithLui();
   else if (action === "open_meme") sendToExtensionAfterAnimation(action, {}, "happy", 300);
   else if (action === "pet_visit") sendToExtensionAfterAnimation(action, {}, "wave", 320);
   else if (allowed.has(action)) sendToExtension(action);
@@ -692,7 +722,7 @@ ipcMain.handle("configure", (_event, input) => {
     else saveKey(app.getPath("userData"), key);
     sarvamApiKey = key;
   }
-  state.settings.idleMemeSeconds = Math.max(10, Math.min(3600, Number(input?.idleSeconds) || 60));
+  state.settings.idleMemeSeconds = Math.max(30, Math.min(3600, Number(input?.idleSeconds) || 30));
   state.settings.sleepPranksEnabled = Boolean(input?.pranks);
   saveState(); broadcastState(); syncExtensionConfig();
   return true;
