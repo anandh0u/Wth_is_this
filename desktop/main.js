@@ -374,10 +374,13 @@ function movePet() {
   }
   const verticalRoam = state.settings.chaosEnabled && now < petRestUntil ? 0 :
     (state.settings.chaosEnabled ? Math.round(Math.sin(now / 950) * Math.min(110, workArea.height * 0.12)) : 0);
-  const y = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN - Math.max(0, verticalRoam);
+  const floorY = workArea.y + workArea.height - 170 - PET_GROUND_MARGIN;
+  const y = Math.max(workArea.y + 8, Math.min(floorY, floorY - Math.max(0, verticalRoam)));
   const nextX = Math.round(petX);
   const current = petWindow.getBounds();
-  if (current.x !== nextX || current.y !== y) petWindow.setPosition(nextX, y, false);
+  if (current.x !== nextX || current.y !== y) {
+    try { petWindow.setPosition(nextX, y, false); } catch { /* Window may be closing; next tick recovers. */ }
+  }
 }
 
 function runDemoSequence() {
@@ -425,7 +428,7 @@ function updateSetting(key, value) {
   state.settings[key] = Boolean(value);
   if (key === "chaosEnabled" && state.settings[key]) nextChaosAt = Date.now() + 45000;
   if (key === "petEnabled" && petWindow && !petWindow.isDestroyed()) {
-    state.settings[key] ? petWindow.showInactive() : petWindow.hide();
+    state.settings[key] ? (petWindow.showInactive(), petWindow.setAlwaysOnTop(true, "screen-saver")) : petWindow.hide();
   }
   saveState();
   syncExtensionConfig();

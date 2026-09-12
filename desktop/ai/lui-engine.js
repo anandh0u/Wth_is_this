@@ -109,7 +109,7 @@ function parseModelContent(content) {
 async function localDecision(context, options = {}) {
   const endpoint = options.endpoint || process.env.WTH_OLLAMA_URL || DEFAULT_ENDPOINT;
   const model = options.model || process.env.WTH_OLLAMA_MODEL || DEFAULT_MODEL;
-  const timeoutMs = options.timeoutMs || 20000;
+  const timeoutMs = options.timeoutMs || 8000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -140,7 +140,7 @@ async function sarvamDecision(context, options = {}) {
   const endpoint = options.sarvamEndpoint || process.env.SARVAM_API_URL || SARVAM_ENDPOINT;
   const model = options.sarvamModel || process.env.SARVAM_MODEL || SARVAM_MODEL;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options.timeoutMs || 20000);
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs || 8000);
   try {
     const response = await fetch(endpoint, {
       method: "POST",
