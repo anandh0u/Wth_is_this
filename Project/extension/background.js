@@ -194,6 +194,7 @@ chrome.runtime.onMessage.addListener((message, _sender, respond) => {
     respond({ ok: false });
     return;
   }
+  if (message.action === "open_meme") send("meme_requested", { source: "popup" });
   handle({ type: message.action, payload: { line: "I found your browser unsupervised." } })
     .then(() => respond({ ok: true }))
     .catch((error) => {

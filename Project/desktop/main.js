@@ -354,6 +354,10 @@ function startBridge() {
           if (message.payload.success) state.boredom = 0;
         } else if (message.type === "idle_state") {
           log(message.payload.state === "active" ? "You have returned. Unfortunately." : "Lui thinks you fell asleep.");
+        } else if (message.type === "meme_requested") {
+          // The extension popup requested a YouTube meme; keep the desktop
+          // soundtrack in sync with that browser action.
+          playRandomMemeAudio();
         }
         broadcastState();
       } catch {
@@ -759,6 +763,7 @@ ipcMain.handle("browser-action", (_event, action) => {
   if (action === "close_active") closeBrowserTabWithLui();
   else if (action === "open_meme") {
     makeLuiJump(900);
+    playRandomMemeAudio();
     sendToExtensionAfterAnimation(action, {}, "happy", 300);
   }
   else if (action === "pet_visit") sendToExtensionAfterAnimation(action, {}, "wave", 320);
