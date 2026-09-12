@@ -55,7 +55,7 @@ Load the `Project/extension` folder from `chrome://extensions` with Developer mo
 
 ### Project Documentation
 
-See  [guide](https://anandh0u.github.io/Wth_is_this/Project/docs.html) for the complete project guide.
+See [the project guide](Project/docs.html) for the complete project guide.
 
 #### Screenshots
 
@@ -69,7 +69,7 @@ The Electron app connects to the Chrome extension through a local WebSocket brid
 
 #### Video
 
-- demo videos and promo : https://drive.google.com/drive/folders/1aK6tN86eYUQduAUdDB0zQIXcScCyrZnP?usp=sharing
+[Watch the demo videos on Google Drive](https://drive.google.com/drive/folders/1aK6tN86eYUQduAUdDB0zQIXcScCyrZnP?usp=sharing)
 
 #### Additional Demos
 
