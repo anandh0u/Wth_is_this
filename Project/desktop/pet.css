@@ -8,3 +8,6 @@ body { display: grid; place-items: end center; }
 #lui.left img { transform: scaleX(-1); }
 #lui.annoyed img { filter: sepia(.14) saturate(1.12) drop-shadow(0 5px 5px #0008); }
 #lui.chaotic img { filter: drop-shadow(0 5px 5px #0008); }
+#lui.happy img { filter: saturate(1.25) brightness(1.08) drop-shadow(0 5px 6px #f8d470aa); }
+#lui.sad img { filter: saturate(.68) brightness(.84) drop-shadow(0 5px 5px #0008); }
+#lui.scared img { filter: saturate(1.25) contrast(1.12) drop-shadow(0 0 8px #fff4c2cc); }

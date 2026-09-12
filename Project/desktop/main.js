@@ -36,6 +36,8 @@ let lastPetLift = -1;
 let tabCloseUntil = 0;
 let petJumpStartedAt = 0;
 let petJumpUntil = 0;
+let activeEmotion = null;
+let emotionUntil = 0;
 let nextRestAt = Date.now() + 12000;
 let nextChaosAt = Date.now() + 45000;
 let chaosTimer;
@@ -114,7 +116,15 @@ function log(message) {
 }
 
 function updateMood() {
-  state.mood = state.boredom >= 75 ? "chaotic" : state.boredom >= 40 ? "annoyed" : "neutral";
+  state.mood = activeEmotion && Date.now() < emotionUntil
+    ? activeEmotion
+    : state.boredom >= 75 ? "chaotic" : state.boredom >= 40 ? "annoyed" : "neutral";
+  if (activeEmotion && Date.now() >= emotionUntil) activeEmotion = null;
+}
+
+function setLuiEmotion(emotion, duration = 3500) {
+  activeEmotion = emotion;
+  emotionUntil = Date.now() + duration;
 }
 
 function broadcastState() {
@@ -190,6 +200,7 @@ function runRandomChaos() {
   const ownerAway = idleSeconds >= 30;
   // Away mode always pairs the local meme with the browser meme tab.
   if (ownerAway || Math.random() < 0.58) {
+    setLuiEmotion("happy");
     state.petLine = ownerAway ? "You left me alone. I found entertainment." : "A random tab has entered the chat.";
     makeLuiJump(1100);
     playPetAnimation("happy");
@@ -208,6 +219,7 @@ function closeBrowserTabWithLui() {
   // Travel only between valid work-area positions: climb to the tab strip,
   // swipe, close an eligible active tab, then return to the desktop.
   tabCloseUntil = Date.now() + 1450;
+  setLuiEmotion("annoyed");
   makeLuiJump(1450);
   state.petLine = "I am climbing to that tab's little ×.";
   playPetAnimation("swipe");
@@ -227,6 +239,7 @@ function sendToExtensionAfterAnimation(type, payload = {}, animation = "", delay
 function performDecisionAction(decision, context) {
   if (!state.settings.petEnabled || !state.settings.chaosEnabled) return;
   if (decision.action === "open_meme") {
+    setLuiEmotion("happy");
     makeLuiJump(900);
     sendToExtensionAfterAnimation("open_meme", {}, "happy", 300);
     playRandomMemeAudio();
@@ -239,6 +252,7 @@ function performDecisionAction(decision, context) {
       state.todos.find((item) => item.status === "alive");
     if (todo) {
       todo.status = "void";
+      setLuiEmotion("annoyed");
       notifyLuiRemoval("todo", todo.text);
       saveState();
     }
@@ -248,6 +262,7 @@ function performDecisionAction(decision, context) {
     if (event) {
       event.status = "void";
       event.notifiedAt = null;
+      setLuiEmotion("annoyed");
       notifyLuiRemoval("schedule", event.title);
       saveState();
     }
@@ -415,7 +430,7 @@ function createPetWindow() {
 
 function movePet() {
   const now = Date.now();
-  const elapsed = Math.min(0.1, (now - previousMoveAt) / 1000);
+  const elapsed = Math.min(0.2, (now - previousMoveAt) / 1000);
   previousMoveAt = now;
   if (!petWindow || petWindow.isDestroyed() || !state.settings.petEnabled || !state.settings.petWalkingEnabled) return;
   const closingTab = now < tabCloseUntil;
@@ -443,9 +458,10 @@ function movePet() {
   // Keep the native transparent window fully inside the work area. The renderer
   // lifts the cat inside this taller window, so it can climb without disappearing.
   const bottomY = workArea.y + workArea.height - PET_WINDOW_HEIGHT;
-  const targetY = closingTab ? workArea.y : bottomY;
   const current = petWindow.getBounds();
-  const y = Math.round(current.y + Math.sign(targetY - current.y) * Math.min(Math.abs(targetY - current.y), 900 * elapsed));
+  // Never move the native window upward. Vertical action stays inside its
+  // transparent bounds, avoiding top-screen disappearance and compositor lag.
+  const y = bottomY;
   const jumpProgress = petJumpUntil > now
     ? Math.max(0, Math.min(1, (now - petJumpStartedAt) / (petJumpUntil - petJumpStartedAt)))
     : 0;
@@ -455,7 +471,7 @@ function movePet() {
     : jumpLift || (state.settings.chaosEnabled
       ? Math.round(Math.max(0, Math.sin(now / 1100)) * 82)
       : 0);
-  if (lift !== lastPetLift) {
+  if (lift !== lastPetLift && (Math.abs(lift - lastPetLift) >= 6 || lift === 0)) {
     lastPetLift = lift;
     petWindow.webContents.send("pet-lift", lift);
   }
@@ -632,7 +648,7 @@ app.whenReady().then(async () => {
   reminderTimer = setInterval(checkReminders, 5000);
   void refreshAiStatus();
   aiStatusTimer = setInterval(refreshAiStatus, 30000);
-  petMovementTimer = setInterval(movePet, 80);
+  petMovementTimer = setInterval(movePet, 150);
   bridgeHeartbeatTimer = setInterval(() => {
     if (extensionSocket && extensionSocket.readyState === extensionSocket.OPEN) {
       extensionSocket.send(JSON.stringify({ type: "heartbeat", payload: { at: Date.now() } }));

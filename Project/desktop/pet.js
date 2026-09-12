@@ -63,7 +63,7 @@ window.wth.onPetAnimation((name) => {
   chooseMode(name, durations[name] || 450);
 });
 window.wth.onState((state) => {
-  lui.classList.remove("neutral", "annoyed", "chaotic");
+  lui.classList.remove("neutral", "annoyed", "chaotic", "happy", "sad", "scared");
   lui.classList.add(state.mood);
   walkingEnabled = state.settings?.petWalkingEnabled !== false;
   if (!modeUntil) restoreMovement();
