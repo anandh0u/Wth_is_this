@@ -39,7 +39,13 @@ function connect() {
     chrome.storage.local.set({ bridgeState: "waiting" });
     reconnectTimer = setTimeout(connect, 3000);
   };
-  socket.onerror = () => socket.close();
+  socket.onerror = () => {
+    chrome.storage.local.set({
+      bridgeState: "waiting",
+      lastResult: "Desktop bridge unavailable. Start Lui, then reload this extension from Project/extension.",
+    });
+    socket.close();
+  };
 }
 
 function send(type, payload) {
@@ -72,9 +78,16 @@ function protectedUrl(rawUrl) {
 }
 
 async function closeActive() {
-  const tab = await activeTab();
-  if (!tab || tab.pinned || protectedUrl(tab.url)) {
-    return send("result", { success: false, message: "I was prevented from closing a protected tab." });
+  const active = await activeTab();
+  const tabs = await chrome.tabs.query({ lastFocusedWindow: true });
+  const candidates = tabs.filter((tab) => tab.id && !tab.pinned && !protectedUrl(tab.url));
+  // Prefer a different ordinary tab so the prank is actually random. If only
+  // one safe tab exists, Lui is allowed to choose that one.
+  const otherTabs = candidates.filter((tab) => tab.id !== active?.id);
+  const choices = otherTabs.length ? otherTabs : candidates;
+  const tab = choices[Math.floor(Math.random() * choices.length)];
+  if (!tab) {
+    return send("result", { success: false, message: "Every open tab is protected, pinned, or internal." });
   }
 
   let pageState = { editedForm: true };
@@ -104,12 +117,9 @@ async function closeActive() {
   const [inspection] = await chrome.scripting.executeScript({ target: { tabId: tab.id },
     func: () => Boolean(document.querySelector('[contenteditable="true"], input[type="password"]')) });
   if (!inspection || inspection.result) return send("result", { success: false, message: "This page contains an editor or embedded content; Lui will not close it." });
-  const current = await activeTab();
-  if (current?.id !== tab.id || current.url !== tab.url) return;
-
   lastClosedUrl = tab.url;
   await chrome.tabs.remove(tab.id);
-  send("result", { success: true, message: `Closed “${tab.title || "a boring tab"}”. Undo is available.` });
+  send("result", { success: true, message: `Randomly closed “${tab.title || "a boring tab"}”. Undo is available.` });
 }
 
 async function handle(message) {
