@@ -59,11 +59,22 @@ See [the project guide](Project/docs.html) for the complete project guide.
 
 #### Screenshots
 
-Add final screenshots here after recording the submission demo.
+| Lui workspace | Task assignment | Mood graph |
+| --- | --- | --- |
+| ![Lui workspace](Project/public/luiappland.svg) | ![Assign tasks](Project/public/uitaskassigner.svg) | ![Lui mood graph](Project/public/luigraph-live.svg) |
 
-#### Diagrams
+#### GitHub Workflow
 
-The Electron app connects to the Chrome extension through a local WebSocket bridge, with local storage, optional Ollama, and Sarvam chat.
+```mermaid
+flowchart LR
+  A[GitHub repository] --> B[GitHub Pages website]
+  A --> C[Project / Electron desktop app]
+  A --> D[Project / Chrome extension]
+  C <-->|Local WebSocket bridge| D
+  C --> E[Local todos, notes & calendar]
+  C --> F[Sarvam AI chat]
+  C -. optional .-> G[Ollama local AI]
+```
 
 ### Project Demo
 
