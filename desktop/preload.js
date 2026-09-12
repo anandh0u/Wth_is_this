@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("wth", {
+  configure: (input) => ipcRenderer.invoke("configure", input),
   getState: () => ipcRenderer.invoke("get-state"),
   addTodo: (text) => ipcRenderer.invoke("add-todo", text),
   voidTodo: (id) => ipcRenderer.invoke("void-todo", id),

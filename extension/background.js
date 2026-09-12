@@ -36,7 +36,7 @@ async function connect() {
     reportActivity();
   };
   socket.onmessage = (event) => {
-    try { handle(JSON.parse(event.data)); } catch { /* Ignore malformed local messages. */ }
+    try { void handle(JSON.parse(event.data)).catch(() => send("result", { success: false, message: "Browser action failed safely." })); } catch { /* Ignore malformed local messages. */ }
   };
   socket.onclose = () => {
     chrome.storage.local.set({ bridgeState: "waiting" });
@@ -68,7 +68,7 @@ function protectedUrl(rawUrl) {
     const url = new URL(rawUrl);
     return !["http:", "https:"].includes(url.protocol) ||
       url.hostname === "localhost" || url.hostname === "127.0.0.1" ||
-      PROTECTED_HOSTS.has(url.hostname);
+      PROTECTED_HOSTS.has(url.hostname) || /bank|checkout|payment|accounts|login|meet\.|exam/i.test(url.href);
   } catch {
     return true;
   }
@@ -103,6 +103,12 @@ async function closeActive() {
   if (pageState.editedForm) {
     return send("result", { success: false, message: "That tab has edited form fields, so I spared it." });
   }
+
+  const [inspection] = await chrome.scripting.executeScript({ target: { tabId: tab.id },
+    func: () => Boolean(document.querySelector('[contenteditable="true"], iframe, input[type="password"]')) });
+  if (!inspection || inspection.result) return send("result", { success: false, message: "This page contains an editor or embedded content; Lui will not close it." });
+  const current = await activeTab();
+  if (current?.id !== tab.id || current.url !== tab.url) return;
 
   lastClosedUrl = tab.url;
   await chrome.tabs.remove(tab.id);
@@ -145,7 +151,7 @@ async function handle(message) {
         line: message.payload?.line,
       });
     } catch {
-      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["atlas.js", "content.js"] });
       await chrome.tabs.sendMessage(tab.id, {
         type: "pet_visit",
         imageUrl: chrome.runtime.getURL("lui-sprite.png"),
@@ -158,7 +164,7 @@ async function handle(message) {
 
 async function handleIdleState(newState) {
   send("idle_state", { state: newState });
-  if (newState === "active" || !config.petEnabled || !config.chaosEnabled || !config.sleepPranksEnabled) return;
+  if (newState !== "idle" || !config.petEnabled || !config.chaosEnabled || !config.sleepPranksEnabled) return;
   const now = Date.now();
   if (now - lastSleepPrankAt < 10 * 60 * 1000) return;
   lastSleepPrankAt = now;
@@ -191,4 +197,6 @@ chrome.runtime.onMessage.addListener((message, _sender, respond) => {
     });
   return true;
 });
+chrome.alarms.create("lui-reconnect", { periodInMinutes: 0.5 });
+chrome.alarms.onAlarm.addListener((alarm) => { if (alarm.name === "lui-reconnect") void connect(); });
 connect();

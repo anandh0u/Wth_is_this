@@ -7,7 +7,10 @@ body { display: grid; place-items: end center; }
 #lui.talking #bubble { display: block; }
 #lui.left img { transform: scaleX(-1); }
 #lui.annoyed img { filter: sepia(.14) saturate(1.12) drop-shadow(0 5px 5px #0008); }
-#lui.chaotic img { filter: drop-shadow(0 0 8px #ff5477) drop-shadow(0 5px 5px #0008); animation: shake .12s linear infinite alternate; }
+#lui.chaotic img { filter: drop-shadow(0 5px 5px #0008); }
+#lui { animation: none; }
+#lui[data-mode="walk"] { animation: paw-step .6s linear infinite; }
+@keyframes paw-step { 0%, 50%, 100% { transform: translateY(0); } 25%, 75% { transform: translateY(-1px); } }
 #lui.acting { animation: none; }
 @keyframes walk-gait {
   0%, 100% { transform: translateY(0) rotate(-1.5deg) scaleY(1); }

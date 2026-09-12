@@ -33,7 +33,7 @@ function draw(items) {
       const meta = document.createElement("p");
       meta.className = "meta";
       meta.textContent = new Date(item.createdAt).toLocaleString();
-      card.append(meta, makeButton("Delete", async () => draw(await window.wth.deleteNote(item.id))));
+      card.append(meta, makeButton(item.status === "void" ? "Restore" : "Send to void", async () => draw(await window.wth.deleteNote(item.id))));
     }
     return card;
   }));
@@ -60,3 +60,4 @@ document.querySelector("#item-form").addEventListener("submit", async (event) =>
 });
 
 window.wth.listData(panel === "calendar" ? "events" : panel).then(draw);
+window.wth.onState((state) => draw(state[panel === "calendar" ? "events" : panel] || []));

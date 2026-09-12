@@ -16,6 +16,10 @@ function showView(id) {
   views.forEach((view) => view.classList.toggle("active", view.id === id));
   if (id === "tasks") void renderTasks();
   if (id === "schedule") renderCalendar();
+  const calendar = document.querySelector('.calendar-panel');
+  document.querySelector('.lui-app').append(calendar);
+  calendar.hidden = !['schedule','tasks'].includes(id);
+  if (!calendar.hidden) renderCalendar();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -26,8 +30,15 @@ function makeTaskRow(task) {
   button.title = task.status === "void" ? "Restore this task" : "Send this task to void";
   button.textContent = task.title;
   button.addEventListener("click", async () => {
-    await window.wth.voidEvent(task.id);
-    await renderTasks();
+    const dialog = document.createElement('dialog');
+    dialog.className = 'task-detail';
+    const title = document.createElement('h2'); title.textContent = task.title;
+    const date = document.createElement('p'); date.textContent = new Date(task.startsAt).toLocaleString();
+    const action = document.createElement('button'); action.textContent = task.status === 'void' ? 'Restore' : 'Send to void';
+    action.onclick = async () => { await window.wth.voidEvent(task.id); dialog.close(); await renderTasks(); };
+    const close = document.createElement('button'); close.textContent = 'Back'; close.onclick = () => dialog.close();
+    dialog.append(title,date,action,close); document.body.append(dialog);
+    dialog.addEventListener('close',()=>dialog.remove()); dialog.showModal();
   });
   return button;
 }
@@ -36,7 +47,7 @@ async function renderTasks() {
   const tasks = await window.wth.listData("events");
   const visible = tasks.filter((task) => task.status === activeList);
   taskList.replaceChildren(...(visible.length
-    ? visible.slice(0, 3).map(makeTaskRow)
+    ? visible.map(makeTaskRow)
     : [Object.assign(document.createElement("p"), { className: "empty", textContent: activeList === "void" ? "The void is quiet." : "No plans yet." })]));
 }
 
@@ -68,6 +79,13 @@ function renderCalendar() {
     cells.push(button);
   }
   grid.replaceChildren(...cells);
+  void window.wth.listData('events').then((events) => {
+    for (const button of grid.querySelectorAll('button')) {
+      const day = Number(button.textContent);
+      const matches = events.filter(item => { const d = new Date(item.startsAt); return item.status === 'scheduled' && d.getFullYear() === year && d.getMonth() === month && d.getDate() === day; });
+      if (matches.length) { button.title = matches.map(item=>item.title).join('\n'); button.style.boxShadow = 'inset 0 -5px #70414a'; }
+    }
+  });
 }
 
 function appendMessage(text, kind) {
@@ -104,8 +122,9 @@ document.querySelector("#calendar-next").addEventListener("click", () => {
 document.querySelector("#task-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const taskForm = event.currentTarget;
   await window.wth.addEvent({ title: form.get("name"), startsAt: `${form.get("date")}T${form.get("time")}`, luiVerdict: "like" });
-  event.currentTarget.reset();
+  taskForm.reset();
   dateInput.value = todayValue();
   activeList = "scheduled";
   showView("tasks");
@@ -116,10 +135,16 @@ document.querySelector("#chat-form").addEventListener("submit", async (event) =>
   const input = document.querySelector("#chat-input");
   const text = input.value.trim();
   if (!text) return;
+  const submit = document.querySelector('#chat-form button');
+  if (submit.disabled) return;
+  submit.disabled = true;
   appendMessage(text, "user");
   input.value = "";
-  const verdict = await window.wth.askLui({ kind: "chat", text });
-  appendMessage(verdict?.line || "Lui is thinking in extremely low resolution.", "lui");
+  try {
+    const verdict = await window.wth.askLui({ kind: "chat", text });
+    appendMessage(verdict?.line || "Lui is busy. Please try again.", "lui");
+  } catch { appendMessage('Chat failed. Please try again.', 'lui'); }
+  finally { submit.disabled = false; }
   const messages = document.querySelector("#messages");
   messages.scrollTop = messages.scrollHeight;
 });
@@ -131,3 +156,38 @@ window.addEventListener("keydown", (event) => {
 dateInput.value = todayValue();
 timeInput.value = "09:00";
 renderCalendar();
+
+// Keep playback alive independently of the currently visible page.
+const memeAudio = new Audio();
+window.wth.onMemeAudio(async (url) => {
+  memeAudio.pause();
+  memeAudio.src = url;
+  memeAudio.volume = 0.65;
+  try { await memeAudio.play(); }
+  catch { appendMessage("Meme playback failed. Check the local audio files.", "lui"); }
+});
+function syncLiveState(state) {
+  if (document.querySelector("#tasks").classList.contains("active")) void renderTasks();
+  const intensity = Math.min(1, Math.max(0, state.boredom / 100));
+  const positions = {
+    annoyed: [42 - intensity * 15, 42 - intensity * 16],
+    happy: [58 + (1 - intensity) * 18, 42 - (1 - intensity) * 16],
+    sad: [42 - intensity * 12, 58 + intensity * 18],
+    scared: [58 + intensity * 13, 58 + intensity * 19],
+  };
+  document.querySelectorAll(".mood-target").forEach((target) => {
+    const p = positions[target.dataset.mood?.toLowerCase()];
+    if (!p) return;
+    target.style.left = `${p[0]}%`;
+    target.style.top = `${p[1]}%`;
+    target.style.opacity = "1";
+    target.textContent = "";
+    target.style.background = `url('../public/mood-${target.dataset.mood}.svg') center / contain no-repeat`;
+    target.style.color = "#feeea3";
+    target.style.fontSize = "32px";
+    target.title = `${target.dataset.mood}: ${Math.round(intensity * 100)}% boredom`;
+  });
+  moodStatus.textContent = `Lui is ${state.mood}. Boredom ${state.boredom}%.`;
+}
+window.wth.onState(syncLiveState);
+window.wth.getState().then(syncLiveState);

@@ -1,4 +1,8 @@
+(() => {
+if (globalThis.__luiContentInstalled) return;
+globalThis.__luiContentInstalled = true;
 const initialValues = new WeakMap();
+let atlasPromise;
 
 document.querySelectorAll("input, textarea, select").forEach((element) => {
   initialValues.set(element, {
@@ -61,13 +65,16 @@ chrome.runtime.onMessage.addListener((message, _sender, respond) => {
     });
     shadow.append(bubble, image);
     document.documentElement.append(host);
-    image.animate([
-      { transform: "translateY(0) rotate(-2deg) scaleY(1)" },
-      { transform: "translateY(-7px) rotate(2deg) scaleY(.97)" },
-      { transform: "translateY(-1px) rotate(2deg) scaleY(1.03)" },
-      { transform: "translateY(-7px) rotate(-2deg) scaleY(.97)" },
-      { transform: "translateY(0) rotate(-2deg) scaleY(1)" },
-    ], { duration: 520, iterations: Infinity, easing: "ease-in-out" });
+    image.style.imageRendering = "pixelated";
+    atlasPromise ||= globalThis.loadLuiAtlas(chrome.runtime.getURL('lui-atlas-v3.png'));
+    atlasPromise.then((frames) => {
+      let index = 0;
+      image.src = frames[0];
+      const timer = setInterval(() => {
+        if (!host.isConnected) return clearInterval(timer);
+        image.src = frames[(++index) % 8];
+      }, 115);
+    }).catch(() => { /* Original sprite remains as a fallback. */ });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       host.style.transform = `translateX(${window.innerWidth + 380}px)`;
     }));
@@ -75,3 +82,4 @@ chrome.runtime.onMessage.addListener((message, _sender, respond) => {
     respond({ shown: true });
   }
 });
+})();

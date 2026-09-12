@@ -1,3 +1,4 @@
+@font-face { font-family: 'Pixelify Sans'; src: url('assets/pixelify-sans.ttf') format('truetype'); font-display: swap; }
 :root {
   color: #3f1724;
   background: #9b6f69;
@@ -88,6 +89,9 @@ button { cursor: pointer; }
 }
 
 .screen-back:hover { opacity: .65; }
+.screen-back { opacity: 1; }
+.schedule-form button { color: #3f1724; background: #dcc589; border: 2px solid #3f1724; }
+.list-switch button { opacity: 1; color: #3f1724; background: #dcc589; }
 
 .mood-target { z-index: 3; width: 16%; height: 20%; }
 .annoyed-target { left: 27%; top: 29%; }
@@ -262,9 +266,22 @@ button { cursor: pointer; }
 
 .task-row:hover, .task-row:focus-visible { background: #feeea3; outline: 3px solid #feeea3; }
 .task-list .empty { margin: 0; text-align: center; color: #feeea3; font-size: clamp(11px, 1.6vw, 17px); }
+.task-list { height: 50%; overflow-y: auto; grid-auto-rows: minmax(52px, auto); gap: 12px; }
+.task-row { min-height: 52px; overflow-wrap: anywhere; }
 
 @media (max-width: 560px) {
   .pixel-screen { min-width: 560px; transform-origin: top left; }
   .graph-view, .chat-view, .list-view, .schedule-screen { overflow-x: auto; }
   .calendar-panel { width: calc(100% - 24px); }
 }
+/* Functional controls stay visible without altering the supplied artwork. */
+.screen-back { opacity: 1; }
+.schedule-form button, .list-switch button { opacity: 1; color: #3f1724; background: #dcc589; border: 2px solid #542334; }
+.list-switch { top: 29%; }
+.mood-target { width: 10%; height: 18%; transform: translate(-50%, -50%); transition: left 1s ease, top 1s ease; }
+.calendar-panel[hidden] { display: none; }
+.task-detail { width: min(90vw, 740px); min-height: 410px; padding: 190px 16% 35px; border: 0; color: #3f1724; background: url('public/luidescription.svg') center / 100% 100%; font-family: 'Pixelify Sans',monospace; overflow-wrap:anywhere; }
+.task-detail::backdrop { background: #2b1528aa; }
+.task-detail h2 { font-size: 20px; }
+.task-detail button { background:#dcc589; color:#3f1724; border:2px solid #542334; margin:4px; padding:8px; }
+@media (max-width: 560px) { .pixel-screen { min-width: 0; } .screen-back { min-width: 28px; min-height: 28px; font-size: 18px; } }

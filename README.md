@@ -1,103 +1,91 @@
-<img width="1280" height="640" alt="git (1)" src="https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd" />
+# WTH Is This? — Lui
 
+An orange desktop cat with an unnecessarily strong opinion about productivity.
+Built by Anandhu and Abhijith. Windows desktop app, Chrome companion extension,
+and a pixel-art web demo. Version 0.1.3.
 
+## Features
 
-# [Project Name] 🎯
+- Desktop walking, sitting, yawning, sleeping and paw reactions.
+- Sarvam conversational chat, including Malayalam; chat cannot execute computer commands.
+- Optional Ollama personality decisions and offline rules.
+- Local todos, notes and events, with reversible void/restore actions.
+- Ctrl+1 todos, Ctrl+2 notes, Ctrl+3 calendar; global when Windows permits registration.
+- Original-art mood graph driven by simulated pet state, not the user's real emotions.
+- Optional idle meme audio and controlled Chrome visits, meme links and guarded tab closing.
+- Local-time reminders without a burst of old missed meetings on startup.
 
+## Run
 
-## Basic Details
-### Team Name: [Name]
+Requires Windows x64. For source builds install Node.js and npm:
 
+```powershell
+npm ci
+npm start
+```
 
-### Team Members
-- Team Lead: [Name] - [College]
-- Member 2: [Name] - [College]
-- Member 3: [Name] - [College]
+For packaged builds, extract the entire Windows folder ZIP and run `WTH Is This.exe`
+inside that folder. Keep its supporting files together. Closing the main window exits Lui.
 
-### Project Description
-[2-3 lines about what your project does]
+## Chrome
 
-### The Problem (that doesn't exist)
-[What ridiculous problem are you solving?]
+Open `chrome://extensions`, enable Developer mode, Load unpacked and select `extension`.
+Reload the extension after upgrading. Keep the desktop app running, open the extension popup,
+and connect. Approve Chrome's local-network permission only if you choose to connect.
+The local bridge binds `127.0.0.1:17381`; WebSocket origins must belong to Chrome extensions.
+This is a demonstration bridge, not a hardened multi-user service.
 
-### The Solution (that nobody asked for)
-[How are you solving it? Keep it fun!]
+## Sarvam
 
-## Technical Details
-### Technologies/Components Used
-For Software:
-- [Languages used]
-- [Frameworks used]
-- [Libraries used]
-- [Tools used]
+Open **Lui → AI and idle settings**, enter your own key and save. The key is encrypted for your
+Windows account outside the app package and repository. A process `SARVAM_API_KEY` also works.
+The model is `sarvam-105b-conversations`. Only chat text and bounded session history go to Sarvam.
+Automatic tab/task decisions do not go to Sarvam. Internet, valid credentials and credit are required.
+Errors are displayed honestly. No model was fine-tuned: prompts, constrained actions and an animation
+state machine control Lui. Optional local decisions use `ollama pull gemma3:270m`.
 
-For Hardware:
-- [List main components]
-- [List specifications]
-- [List tools required]
+## Memes and demo
 
-### Implementation
-For Software:
-# Installation
-[commands]
+First test **Lui → Play local meme audio** and check Windows volume.
+In AI and idle settings enable idle memes and set a delay of 10–3600 seconds.
+Use 10 seconds for a demo, then stop keyboard/mouse input. Local playback has a two-minute cooldown.
+Set the delay shorter than Windows' display-off timeout. Lui detects inactivity, not sleep;
+it cannot play while Windows is suspended and does not override power settings.
+Browser sleep pranks additionally require browser chaos and have a ten-minute cooldown.
+Ctrl+D runs the short browser/audio demo. Stop being sentient cancels pending demo actions.
 
-# Run
-[commands]
+## Safety and limitations
 
-### Project Documentation
-For Software:
+Automatic pranks are opt-in. The extension avoids pinned, internal, account/payment/login and
+local-development pages, edited forms, password fields, frames and content-editable pages.
+Undo reopens the last closed URL, not unsaved page state. Use demonstration tabs, not important work.
+The paw animation is visual; Chrome APIs perform tab actions. A webpage cannot reach the native tab strip.
 
-# Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
-*Add caption explaining what this shows*
+The executable is **unsigned**. SmartScreen reputation warnings differ from Defender malware detections.
+Do not disable antivirus or add exclusions. If Defender identifies a threat, stop and retain the exact
+detection name for investigation. Acceptance by every antivirus engine is not guaranteed.
 
-![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
+## Verification
 
-![Screenshot3](Add screenshot 3 here with proper name)
-*Add caption explaining what this shows*
+```powershell
+npm run check
+npm test
+npm audit --omit=dev
+npm run dist:win
+```
 
-# Diagrams
-![Workflow](Add your workflow/architecture diagram here)
-*Add caption explaining your workflow*
+Tests cover action restrictions, chat failures/history, reminder boundaries and idle cooldown/lock behavior.
+They do not certify all UI, Chrome versions, displays or antivirus engines.
+`desktop/` contains Electron and widgets; `extension/` contains Chrome integration; `public/` is original
+page artwork; `assets/pet/` contains sprites. The public web demo is separate from desktop capabilities.
 
-For Hardware:
+## Demo video
 
-# Schematic & Circuit
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
+Video link will be added after recording.
 
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
+## Art
 
-# Build Photos
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
-
-### Project Demo
-# Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
-
-# Additional Demos
-[Add any extra demo materials/links]
-
-## Team Contributions
-- [Name 1]: [Specific contributions]
-- [Name 2]: [Specific contributions]
-- [Name 3]: [Specific contributions]
-
----
-Made with ❤️ at TinkerHub Useless Projects 
-
-![Static Badge](https://img.shields.io/badge/TinkerHub-24?color=%23000000&link=https%3A%2F%2Fwww.tinkerhub.org%2F)
-![Static Badge](https://img.shields.io/badge/UselessProjects--26-26?link=https%3A%2F%2Ftinkerhub.org%2Fevents%2F1M8ORET9A1%2Fuseless-projects-3.0)
-
-
-
+Lui-land artwork is preserved. The built-in image tool generated `assets/pet/lui-atlas-v3.png` from the
+existing orange/brown cat reference. Prompt: uniform 4×4 atlas, eight natural walking phases, seated,
+closed-eye, yawning, sleeping, paw lift/reach, happy and curious poses; consistent pixel size, fixed
+baseline, no text or scenery. Runtime background removal cleans connected neutral checkerboard pixels.

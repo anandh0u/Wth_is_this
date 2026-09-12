@@ -1,3 +1,4 @@
+@font-face { font-family: 'Pixelify Sans'; src: url('../../assets/pixelify-sans.ttf') format('truetype'); font-display: swap; }
 :root { font-family: system-ui, sans-serif; color: #f5f1e8; background: #17161b; }
 * { box-sizing: border-box; }
 body { margin: 0; padding: 24px; }
@@ -11,3 +12,9 @@ button { cursor: pointer; }
 .item.void { opacity: .45; text-decoration: line-through; }
 .meta { color: #bcb5c5; font-size: .85rem; }
 .empty { color: #bcb5c5; }
+/* The desktop widgets use the same palette and pixel geometry as Lui land. */
+:root { font-family: "Pixelify Sans", "Courier New", monospace; color: #3f1724; background: #9b6f69; }
+body { min-height: 100vh; background: linear-gradient(105deg, #c0ac91bb, #65444cbb), url("../../assets/website/lui-texture.jpg") center/cover; }
+form, .item { border-radius: 0; border: 2px solid #dcc589; background: #dcc589; color: #3f1724; box-shadow: 4px 4px #542334; }
+input, textarea, select, button { color: #3f1724; background: #feeea3; border: 2px solid #542334; }
+.meta, .empty { color: #3f1724; }

@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Lui settings</title>
+<link rel="stylesheet" href="panels/shared.css"><body><h1>Lui settings</h1>
+<form id="settings"><label>Sarvam API key <input id="key" type="password" autocomplete="off" placeholder="Leave blank to keep existing key"></label>
+<p>The key is encrypted for this Windows account and never included in the download. Only chat messages go to Sarvam.</p>
+<label>Idle meme delay (seconds) <input id="idle" type="number" min="10" max="3600" value="60"></label>
+<label><input id="pranks" type="checkbox"> Play a local meme when idle</label><p>Choose a delay shorter than your display-off timeout. Lui cannot play audio while Windows is suspended.</p>
+<button>Save settings</button><p id="status" role="status"></p></form><script src="settings.js"></script></body></html>

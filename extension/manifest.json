@@ -1,21 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Lui · WTH Is This?",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Lets the WTH desktop pet perform controlled browser pranks.",
-  "permissions": ["tabs", "storage", "scripting", "idle"],
+  "permissions": ["tabs", "storage", "scripting", "idle", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
+      "js": ["atlas.js", "content.js"],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icon.png", "lui-sprite.png"],
+      "resources": ["icon.png", "lui-sprite.png", "lui-atlas-v3.png"],
       "matches": ["http://*/*", "https://*/*"]
     }
   ],
