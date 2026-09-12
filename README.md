@@ -73,7 +73,7 @@ flowchart LR
   C <-->|Local WebSocket bridge| D
   C --> E[Local todos, notes & calendar]
   C --> F[Sarvam AI chat]
-  C -. optional .-> G[Ollama local AI]
+  C .-> G[Ollama local AI]
 ```
 
 ### Project Demo
