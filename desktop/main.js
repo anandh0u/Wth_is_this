@@ -59,7 +59,7 @@ let state = {
   settings: {
     petEnabled: true,
     chaosEnabled: false,
-    sleepPranksEnabled: false,
+    sleepPranksEnabled: true,
     localAiEnabled: true,
     petWalkingEnabled: true,
     idleMemeSeconds: 30,
@@ -81,6 +81,12 @@ function loadState() {
     // Migrate the original one-minute default to the requested 30-second cue
     // without overriding a deliberate custom delay.
     if (state.settings.idleMemeSeconds === 60) state.settings.idleMemeSeconds = 30;
+    // Existing installs had this feature opt-in. Enable the new 30-second
+    // behaviour once, while preserving any choice made after this migration.
+    if (state.settings.idleMemePolicyVersion !== 1) {
+      state.settings.sleepPranksEnabled = true;
+      state.settings.idleMemePolicyVersion = 1;
+    }
   } catch {
     // First run or invalid state: start clean.
   }
