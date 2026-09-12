@@ -55,7 +55,7 @@ Load the `Project/extension` folder from `chrome://extensions` with Developer mo
 
 ### Project Documentation
 
-See  [https://anandh0u.github.io/Wth_is_this/docs.html#controls](https://anandh0u.github.io/Wth_is_this/) for the complete project guide.
+See  [guide](https://anandh0u.github.io/Wth_is_this/Project/docs.html) for the complete project guide.
 
 #### Screenshots
 
