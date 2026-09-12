@@ -159,12 +159,20 @@ renderCalendar();
 
 // Keep playback alive independently of the currently visible page.
 const memeAudio = new Audio();
+const luiSpeechAudio = new Audio();
 window.wth.onMemeAudio(async (url) => {
   memeAudio.pause();
   memeAudio.src = url;
   memeAudio.volume = 0.65;
   try { await memeAudio.play(); }
   catch { appendMessage("Meme playback failed. Check the local audio files.", "lui"); }
+});
+window.wth.onLuiSpeech(async (url) => {
+  luiSpeechAudio.pause();
+  luiSpeechAudio.src = url;
+  luiSpeechAudio.volume = 0.9;
+  try { await luiSpeechAudio.play(); }
+  catch { /* Browser audio is optional; Lui's text still remains visible. */ }
 });
 function syncLiveState(state) {
   if (document.querySelector("#tasks").classList.contains("active")) void renderTasks();

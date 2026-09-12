@@ -7,6 +7,7 @@ const { decide: decideAsLui, getStatus: getAiStatus } = require("./ai/lui-engine
 const { randomAudioUrl } = require("./audio");
 const { saveKey, readKey } = require("./secrets");
 const { reminderState, idleMemeDue } = require("./timing");
+const { synthesizeLuiSpeech } = require("./speech");
 
 const PORT = 17381;
 const PET_GROUND_MARGIN = 10;
@@ -42,6 +43,9 @@ let nextRestAt = Date.now() + 12000;
 let nextChaosAt = Date.now() + 45000;
 let chaosTimer;
 let sarvamApiKey = process.env.SARVAM_API_KEY || "";
+let speechInFlight = false;
+let lastSpeechAt = 0;
+let lastSpeechLine = "";
 const chatHistory = [];
 const pendingActions = new Set();
 function later(callback, delay) {
@@ -167,6 +171,28 @@ function playRandomMemeAudio() {
   return true;
 }
 
+// Voice is deliberately best-effort: Lui must remain responsive when Sarvam is
+// unavailable, offline, or the key has not been configured in Settings.
+async function speakAsLui(line, { meow = false } = {}) {
+  const text = `${meow ? "Meow. " : ""}${String(line || "").trim()}`.slice(0, 240);
+  if (!sarvamApiKey || !text || speechInFlight) return false;
+  if (text === lastSpeechLine || Date.now() - lastSpeechAt < 2500) return false;
+  speechInFlight = true;
+  try {
+    const audio = await synthesizeLuiSpeech(text, sarvamApiKey);
+    if (!audio || !mainWindow || mainWindow.isDestroyed()) return false;
+    mainWindow.webContents.send("lui-speech", audio);
+    lastSpeechAt = Date.now();
+    lastSpeechLine = text;
+    return true;
+  } catch {
+    // Do not expose credentials or turn a temporary voice outage into an app error.
+    return false;
+  } finally {
+    speechInFlight = false;
+  }
+}
+
 function playPetAnimation(name) {
   petRestUntil = Date.now() + ({ sleep: 8000, sit: 4000, yawn: 1800, peek: 2500 }[name] || 900);
   if (petWindow && !petWindow.isDestroyed()) {
@@ -192,6 +218,7 @@ function notifyLuiRemoval(kind, title) {
       }).show();
     }
   } catch { /* Windows notification support is optional. */ }
+  void speakAsLui(`Meow. I removed your ${label}: ${title}.`);
 }
 
 function runRandomChaos() {
@@ -202,12 +229,14 @@ function runRandomChaos() {
   if (ownerAway || Math.random() < 0.58) {
     setLuiEmotion("happy");
     state.petLine = ownerAway ? "You left me alone. I found entertainment." : "A random tab has entered the chat.";
+    void speakAsLui(ownerAway ? "You left me alone. Meow. I found entertainment." : "Meow. A random tab has entered the chat.");
     makeLuiJump(1100);
     playPetAnimation("happy");
     playRandomMemeAudio();
     sendToExtensionAfterAnimation("open_meme", {}, "happy", 500);
   } else {
     state.petLine = "This tab has overstayed its welcome.";
+    void speakAsLui("Meow. This tab has overstayed its welcome.");
     closeBrowserTabWithLui();
   }
   state.boredom = Math.min(100, state.boredom + 15);
@@ -222,6 +251,7 @@ function closeBrowserTabWithLui() {
   setLuiEmotion("annoyed");
   makeLuiJump(1450);
   state.petLine = "I am climbing to that tab's little ×.";
+  void speakAsLui("Meow. I am climbing to that tab's little cross.");
   playPetAnimation("swipe");
   broadcastState();
   later(() => sendToExtension("close_active"), 980);
@@ -283,6 +313,7 @@ async function runLuiDecision(context, allowAction = true) {
       }),
     }, { localAiEnabled: state.settings.localAiEnabled, sarvamApiKey });
     state.petLine = decision.line;
+    void speakAsLui(decision.line, { meow: context.kind !== "chat" });
     log(`${decision.source}: ${decision.verdict} → ${decision.action}`);
     if (allowAction) performDecisionAction(decision, context);
     lastLuiDecisionAt = Date.now();
@@ -783,6 +814,7 @@ ipcMain.handle("ask-lui", async (_event, input) => {
       if (chatHistory.length > 16) chatHistory.splice(0, chatHistory.length - 16);
     }
     state.petLine = result.line.slice(0, 90);
+    void speakAsLui(result.line);
     broadcastState();
     return result;
   }
